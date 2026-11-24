@@ -47,20 +47,46 @@ function stripJsComments(src) {
   let i = 0;
   let mode = 'code';
   let quote = '';
+  let inClass = false;            // inside [...] of a regex literal
+  const tpl = [];                 // brace depth at each `${` of an enclosing template
+  let depth = 0;
+  // A '/' starts a regex (not division) after these tokens or at the start.
+  const regexBefore = (s) => {
+    const m = /(\S)\s*$/.exec(s);
+    if (!m) return true;
+    if (/[(,=:[!&|?{};+\-*%<>~^]/.test(m[1])) return true;
+    return /\b(return|typeof|case|in|of|delete|void|throw|new|else|do)\s*$/.test(s);
+  };
   while (i < src.length) {
     const c = src[i];
     const n = src[i + 1];
     if (mode === 'code') {
       if (c === '/' && n === '/') { mode = 'line'; i += 2; continue; }
       if (c === '/' && n === '*') { mode = 'block'; i += 2; continue; }
+      if (c === '/' && regexBefore(out.slice(-200))) { mode = 'regex'; inClass = false; out += c; i++; continue; }
       if (c === '"' || c === "'" || c === '`') { mode = 'str'; quote = c; out += c; i++; continue; }
+      if (c === '{') depth++;
+      if (c === '}') {
+        if (tpl.length && depth === tpl[tpl.length - 1]) { tpl.pop(); mode = 'str'; quote = '`'; out += c; i++; continue; }
+        depth--;
+      }
       out += c; i++; continue;
     }
     if (mode === 'line') { if (c === '\n') { mode = 'code'; out += c; } i++; continue; }
     if (mode === 'block') { if (c === '*' && n === '/') { mode = 'code'; i += 2; continue; } if (c === '\n') out += c; i++; continue; }
+    if (mode === 'regex') {
+      out += c;
+      if (c === '\\') { out += n || ''; i += 2; continue; }
+      if (c === '\n') { mode = 'code'; i++; continue; }     // not a regex after all
+      if (c === '[') inClass = true;
+      else if (c === ']') inClass = false;
+      else if (c === '/' && !inClass) mode = 'code';
+      i++; continue;
+    }
     if (mode === 'str') {
       out += c;
       if (c === '\\') { out += n || ''; i += 2; continue; }
+      if (quote === '`' && c === '$' && n === '{') { out += n; i += 2; tpl.push(depth); mode = 'code'; continue; }
       if (c === quote) mode = 'code';
       i++; continue;
     }
