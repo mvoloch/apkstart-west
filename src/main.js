@@ -8,6 +8,11 @@ const fs = require('fs');
 const path = require('path');
 
 const store = require('./core/store');
+const i18n = require('./core/i18n');
+const { tr } = i18n;
+// Interface language (ApkStart West): read once here; preloads ask for it synchronously.
+try { i18n.setLang((store.getSettings().ui || {}).language); } catch (_) { /* stays English */ }
+ipcMain.on('i18n:lang', (e) => { e.returnValue = i18n.getLang(); });
 const { Runtime } = require('./core/engine');
 const { Installer } = require('./core/installer');
 const { Sharer } = require('./core/sharer');
@@ -1763,6 +1768,16 @@ function registerIpc() {
   ipcMain.handle('settings:set', (_e, rawPatch) => {
     const patch = sanitizeResourcePatch(rawPatch);
     const next = store.saveSettings(patch);
+    if (patch && patch.ui && 'language' in patch.ui && i18n.normalize(patch.ui.language) !== i18n.getLang()) {
+      i18n.setLang(patch.ui.language);
+      // Reload the main window after this reply has gone out; the tray menu
+      // rebuilds itself every few seconds. The manual is closed so it reopens
+      // in the new language; app windows pick it up when next opened.
+      setTimeout(() => {
+        try { if (manualWindow && !manualWindow.isDestroyed()) manualWindow.close(); } catch (_) { /* ignore */ }
+        try { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.reload(); } catch (_) { /* ignore */ }
+      }, 150);
+    }
     if (patch && patch.autoStart !== undefined) applyAutoStart();
     if (patch && patch.display && appWin && appWin.isOpen) {
       // 竖屏基准尺寸变了：只影响后续打开的窗口大小，不打断正在跑的应用

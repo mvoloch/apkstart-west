@@ -1,9 +1,17 @@
 'use strict';
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
+const i18n = require('./core/i18n');
+
+// Interface language comes from the main process once, synchronously, so the
+// first paint is already in the right language.
+try { i18n.setLang(ipcRenderer.sendSync('i18n:lang')); } catch (_) { /* stays English */ }
 
 const invoke = (channel, payload) => ipcRenderer.invoke(channel, payload);
 
 contextBridge.exposeInMainWorld('apkstart', {
+  t: (text, vars) => i18n.t(text, vars),
+  lang: () => i18n.getLang(),
+  dictionary: () => i18n.dictionary(),
   info: () => invoke('app:info'),
   listApps: () => invoke('apps:list'),
   pickApk: () => invoke('apk:pick'),

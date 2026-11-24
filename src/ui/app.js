@@ -1082,6 +1082,7 @@ function fillSettings(s) {
   $('setDeviceSharedDir').value = s.deviceSharedDir || '';
   const d = s.display || {};
   $('setAutoStart').checked = s.autoStart !== false;
+  if ($('setUiLanguage')) $('setUiLanguage').value = (s.ui && s.ui.language) || 'en';
   const eng = s.engine || {};
   if ($('setResourceMode')) $('setResourceMode').value = eng.resourceMode || 'balanced';
   if ($('setGpuPreference')) $('setGpuPreference').value = eng.gpuPreference || 'auto';
@@ -1693,6 +1694,12 @@ function bindSettings() {
   }
   if ($('setRenderSize')) {
     $('setRenderSize').addEventListener('change', (e) => save({ engine: { renderSize: e.target.value } }));
+  }
+  if ($('setUiLanguage')) {
+    // The main process switches language and reloads this window.
+    $('setUiLanguage').addEventListener('change', async (e) => {
+      state.settings = await api.setSettings({ ui: { language: e.target.value } });
+    });
   }
   if ($('setLocale')) {
     $('setLocale').addEventListener('change', async (e) => {

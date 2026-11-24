@@ -1,0 +1,1 @@
+Portuguese (Brazil) dictionary for ApkStart West. One flat JSON object per file: { "English text": "Texto em português" }. Keep {placeholders} identical. Files are merged in name order; see src/core/i18n.js.

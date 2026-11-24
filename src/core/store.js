@@ -37,6 +37,8 @@ const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
 const DEFAULT_SETTINGS = {
   adbPath: '',
   device: '127.0.0.1:5555',
+  // ApkStart West interface language: 'en' (default) or 'pt-BR'. See src/core/i18n.js.
+  ui: { language: 'en' },
   /**
    * 驱动（兼容补丁）扩展：用户自己写的 JSON 补丁放在数据目录的 drivers/ 下。
    * 这里只记「被用户关掉的 id」——默认全开，坏了能一键关，不用删文件。
