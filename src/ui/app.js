@@ -219,7 +219,7 @@ async function refreshStatus() {
 
     if (!s.adbOk) {
       dot.className = 'dot err';
-      text.textContent = tr('Runtime not set up — open Settings → Runtime and run Set up everything');
+      text.textContent = tr('Runtime not set up — open Settings → Basics and install and run Set up everything');
       tag.textContent = tr('Setup needed');
       tag.className = 'brand-tag';
     } else if (s.deviceOnline) {
@@ -240,12 +240,12 @@ async function refreshStatus() {
       tag.className = 'brand-tag';
     } else if (s.needsSetup === 'sysimg') {
       dot.className = 'dot err';
-      text.textContent = tr('Android 14 system image missing — download it in Settings → Runtime (about 1.5 GB, only once)');
+      text.textContent = tr('Android 14 system image missing — download it in Settings → Basics and install (about 1.5 GB, only once)');
       tag.textContent = tr('Image to download');
       tag.className = 'brand-tag';
     } else if (s.needsSetup === 'emulator') {
       dot.className = 'dot err';
-      text.textContent = tr('Runtime engine not installed — open Settings → Runtime and run Set up everything');
+      text.textContent = tr('Runtime engine not installed — open Settings → Basics and install and run Set up everything');
       tag.textContent = tr('Setup needed');
       tag.className = 'brand-tag';
     } else if (s.needsSetup === 'boot') {
@@ -262,7 +262,7 @@ async function refreshStatus() {
       dot.className = 'dot';
       text.textContent = s.installed
         ? tr('Runtime idle (it starts automatically when you install or open an app)')
-        : tr('Android is not installed in the runtime yet — open Settings → Runtime to continue');
+        : tr('Android is not installed in the runtime yet — open Settings → Basics and install to continue');
       tag.textContent = s.installed ? tr('Idle') : tr('Not installed');
       tag.className = 'brand-tag';
     }
