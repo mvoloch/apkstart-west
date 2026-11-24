@@ -738,8 +738,11 @@ class EmulatorEngine {
       else args.push(a.flag, a.value);
     }
     // Opt-in network audit (docs/NO-CHINA.md): the emulator writes every guest
-    // packet to this pcap file. Off unless the variable is set.
-    if (process.env.APKSTART_EMULATOR_TCPDUMP) args.push('-tcpdump', process.env.APKSTART_EMULATOR_TCPDUMP);
+    // packet to a pcap file. Off unless the variable is set. Each launch gets
+    // its own file (<name>-<time>.pcap) so a retry never overwrites the
+    // capture of an earlier attempt.
+    const capture = process.env.APKSTART_EMULATOR_TCPDUMP;
+    if (capture) args.push('-tcpdump', `${capture.replace(/\.pcap$/i, '')}-${Date.now()}.pcap`);
     return args;
   }
 

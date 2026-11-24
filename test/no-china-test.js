@@ -107,7 +107,7 @@ test('emulator: no DNS override, and packet capture only when APKSTART_EMULATOR_
     assert.ok(!plain.includes('-tcpdump'), 'no capture by default');
     process.env.APKSTART_EMULATOR_TCPDUMP = 'C:\\audit\\run.pcap';
     const audited = emu.buildArgs({ gpu: 'software' });
-    assert.equal(audited[audited.indexOf('-tcpdump') + 1], 'C:\\audit\\run.pcap');
+    assert.match(audited[audited.indexOf('-tcpdump') + 1], /^C:\\audit\\run-\d+\.pcap$/);
   } finally {
     if (saved === undefined) delete process.env.APKSTART_EMULATOR_TCPDUMP;
     else process.env.APKSTART_EMULATOR_TCPDUMP = saved;
