@@ -16,7 +16,7 @@ ApkStart West is a fork of [ApkStart](https://github.com/RoutineMiku/apkstart) b
 - **Each app is its own window**, sized for portrait or landscape, with its own taskbar entry.
 - **Google Play works.** The runtime is Google's official Android Emulator with the Android 14 Google Play system image, downloaded from `dl.google.com`.
 - **Shared folder.** `%USERPROFILE%\ApkStartShared` on the PC syncs with `/sdcard/ApkStartShared` in Android.
-- **English or Portuguese interface** (Settings → Basic → Interface language). Android itself starts in English (changeable) and uses the PC's time zone.
+- **English or Portuguese interface** (Settings → Basics and install → Interface language). Android itself starts in English (changeable) and uses the PC's time zone.
 
 ## What changed from upstream
 
@@ -83,7 +83,7 @@ O ApkStart West é um fork do [ApkStart](https://github.com/RoutineMiku/apkstart
 - **Cada app abre na sua própria janela**, com entrada própria na barra de tarefas.
 - **A Google Play funciona.** O runtime é o emulador oficial do Android, do Google, com a imagem Android 14 com Google Play, baixada de `dl.google.com`.
 - **Pasta compartilhada** entre o PC (`%USERPROFILE%\ApkStartShared`) e o Android (`/sdcard/ApkStartShared`).
-- **Interface em inglês ou português** (Configurações → Básico → Idioma da interface). O Android começa em inglês (dá para mudar) e usa o fuso horário do PC.
+- **Interface em inglês ou português** (Configurações → Básico e instalação → Idioma da interface). O Android começa em inglês (dá para mudar) e usa o fuso horário do PC.
 
 O que mudou em relação ao original: sai o Gitee e os proxies do GitHub (ghfast.top, gh-proxy.com); sai o DNS chinês forçado (223.5.5.5 e 119.29.29.29) e o Android passa a usar o DNS do seu PC; a verificação de conexão volta para a do Google, em vez da Xiaomi; o Android deixa de vir em chinês com fuso de Xangai; o atualizador só olha para `mvoloch/apkstart-west` e o app usa pasta de dados e identidade próprias, então nunca troca nem mexe numa instalação do ApkStart original. A auditoria completa, com a captura de tráfego de uma execução real, está em [docs/NO-CHINA.md](docs/NO-CHINA.md).
 
