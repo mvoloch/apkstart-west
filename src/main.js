@@ -1509,8 +1509,8 @@ async function launchOne(pkg) {
         if (!a || a.ok) return;
         accelWarned = true;
         notify(tr('Running in software emulation (very slow)'), store.STORE_BUILD
-          ? tr('Turn on "Windows Hypervisor Platform" and restart once to make it 5 to 10 times faster. Settings → Environment check → Fix opens that window for you.')
-          : tr('Settings → Environment check → Fix can turn it on in one click (needs administrator approval). Then restart once.'));
+          ? tr('Turn on "Windows Hypervisor Platform" and restart once to make it 5 to 10 times faster. Environment check (bottom right) → Fix opens that window for you.')
+          : tr('Environment check (bottom right) → Fix can turn it on in one click (needs administrator approval). Then restart once.'));
       }).catch(() => {});
     }
     // 兜底：如果 early attach 没触发（比如嵌入模式），这里补一次。幂等，已收则无事。

@@ -35,7 +35,7 @@
   "Network OK {ip}": "Rede OK {ip}",
   "VM offline": "VM sem rede",
   "The Android virtual machine is online; apps that need the internet can load normally": "A máquina virtual Android está online; apps que usam internet carregam normalmente",
-  "The Android virtual machine has no network, so online pages stay blank or show errors. You can fix it in Settings → Repair network": "A máquina virtual Android está sem rede, então páginas online ficam em branco ou mostram erros. Você pode corrigir em Configurações → Reparar rede",
+  "The Android virtual machine has no network, so online pages stay blank or show errors. You can fix it in Settings → Basics and install → Repair network": "A máquina virtual Android está sem rede, então páginas online ficam em branco ou mostram erros. Você pode corrigir em Configurações → Básico e instalação → Reparar rede",
   "Status check failed: {msg}": "Falha ao verificar o status: {msg}",
   "engine": "motor",
   "system image": "imagem do sistema",

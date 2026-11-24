@@ -16,6 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
 const { AVD_NAME, SNAPSHOT_NAME } = require('./emulator');
+const { tr } = require('./i18n');
 
 /** 引导阶段计时：第一次看到「在跑但没 ready」的时刻 */
 let bootingSince = 0;
@@ -186,7 +187,7 @@ async function collect(ctx) {
     phase,
     ready,
     bootMs: bootingSince ? Date.now() - bootingSince : 0,
-    error: (status && status.error && !/缺少 adb/.test(status.error)) ? status.error : '',
+    error: (status && status.error && status.error !== tr('adb is missing: click "Deploy" to download it automatically')) ? status.error : '',
     lastFailure: lastFailure ? { error: lastFailure.error || lastFailure.reason || '' } : null,
     locks: paths ? countLocks(paths.avdHome) : 0,
     orphans: null,

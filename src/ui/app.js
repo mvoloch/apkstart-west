@@ -280,7 +280,7 @@ async function refreshStatus() {
         netEl.className = 'status-item status-net ' + (s.network.ok ? 'ok' : 'warn');
         netEl.title = s.network.ok
           ? tr('The Android virtual machine is online; apps that need the internet can load normally')
-          : tr('The Android virtual machine has no network, so online pages stay blank or show errors. You can fix it in Settings → Repair network');
+          : tr('The Android virtual machine has no network, so online pages stay blank or show errors. You can fix it in Settings → Basics and install → Repair network');
       }
     }
 

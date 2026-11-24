@@ -16,15 +16,16 @@
  */
 
 const manual = require('./manual');
+const { tr } = require('./i18n');
 
 /** 问题分类（设置页按这个顺序分组展示） */
 const CATEGORIES = [
-  { id: 'runtime', name: '运行时', hint: '安卓虚拟机进程、启动阶段、快照与残留锁' },
-  { id: 'device', name: '设备连接', hint: 'adb 授权状态、设备是否在线' },
-  { id: 'storage', name: '存储', hint: '磁盘余量、数据分区、共享目录' },
-  { id: 'settings', name: '设置', hint: '配置之间的冲突与互相抵消' },
-  { id: 'network', name: '网络', hint: '安卓网络与下载源连通性' },
-  { id: 'logs', name: '日志', hint: '运行日志里的错误' },
+  { id: 'runtime', name: 'Runtime', hint: 'Android virtual machine process, boot stage, snapshots and leftover locks' },
+  { id: 'device', name: 'Device connection', hint: 'adb authorization state and whether the device is online' },
+  { id: 'storage', name: 'Storage', hint: 'Free disk space, data partition and shared folder' },
+  { id: 'settings', name: 'Settings', hint: 'Settings that conflict with or cancel each other' },
+  { id: 'network', name: 'Network', hint: 'Android network and download source connectivity' },
+  { id: 'logs', name: 'Logs', hint: 'Errors in the runtime log' },
 ];
 
 const CATEGORY_IDS = CATEGORIES.map((c) => c.id);
@@ -82,8 +83,8 @@ function evaluate(obs) {
       code: 'runtime.bootFailed',
       category: 'runtime',
       severity: 'error',
-      title: '安卓运行时上次启动失败',
-      hint: '运行时的真实报错已经拿到，按这条原因处理通常一次就能恢复。',
+      title: tr('The Android runtime failed to start last time'),
+      hint: tr('The real error from the runtime was captured. Fixing this cause usually restores it in one go.'),
       detail: bootError,
       fix: 'restartRuntime',
     });
@@ -95,9 +96,9 @@ function evaluate(obs) {
       code: 'runtime.stuckBoot',
       category: 'runtime',
       severity: 'warn',
-      title: '安卓开机卡在引导阶段',
-      hint: '已经引导超过 2 分半还没进系统。常见原因是快速启动快照损坏，重启运行时（会走一次冷启动）通常能解决。',
-      detail: `阶段：${runtime.phase}`,
+      title: tr('Android is stuck in the boot stage'),
+      hint: tr('It has been booting for more than 2.5 minutes without reaching the system. A common cause is a damaged quick-start snapshot; restarting the runtime (one cold start) usually fixes it.'),
+      detail: tr('Stage: {phase}', { phase: runtime.phase }),
       fix: 'restartRuntime',
     });
   }
@@ -108,8 +109,8 @@ function evaluate(obs) {
       code: 'runtime.staleLocks',
       category: 'runtime',
       severity: 'warn',
-      title: `检测到 ${runtime.locks} 个上次残留的锁文件`,
-      hint: '锁文件没清会让下一次启动被判定为「AVD 已被占用」而直接失败。可以一键清掉。',
+      title: tr('Found {n} lock files left from the last run', { n: runtime.locks }),
+      hint: tr('If lock files are not cleared, the next start is treated as "AVD already in use" and fails right away. You can clear them in one click.'),
       fix: 'lock',
     });
   }
@@ -121,8 +122,8 @@ function evaluate(obs) {
       code: 'runtime.orphanProcesses',
       category: 'runtime',
       severity: 'warn',
-      title: `有 ${runtime.orphans} 个残留的模拟器进程`,
-      hint: '上次没有正常关机的安卓进程还占着资源与 AVD 锁，会让下次开机失败。可以一键清理（不会动已装应用与存档）。',
+      title: tr('{n} leftover emulator processes found', { n: runtime.orphans }),
+      hint: tr('Android processes from a run that did not shut down cleanly still hold resources and the AVD lock, which makes the next start fail. You can clean them up in one click (installed apps and saves are not touched).'),
       fix: 'orphans',
     });
   }
@@ -133,8 +134,8 @@ function evaluate(obs) {
       code: 'runtime.staleSnapshot',
       category: 'runtime',
       severity: 'warn',
-      title: '快速启动快照已损坏',
-      hint: '快照文件还在但校验不通过，每次开机都要额外冷启动一次。删掉它会用一次冷启动换回磁盘空间。',
+      title: tr('The quick-start snapshot is damaged'),
+      hint: tr('The snapshot file is still there but fails validation, so every start needs an extra cold start. Deleting it frees disk space at the cost of one cold start.'),
       fix: 'snapshots',
     });
   }
@@ -147,8 +148,8 @@ function evaluate(obs) {
       code: 'device.unauthorized',
       category: 'device',
       severity: 'error',
-      title: '安卓设备未授权调试',
-      hint: '安卓侧弹过「允许 USB 调试吗」但没被确认，adb 一直连不上。重启运行时（走一次冷启动）会重新弹出确认框，确认后即恢复。',
+      title: tr('The Android device has not authorized USB debugging'),
+      hint: tr('Android showed an "Allow USB debugging?" prompt that was never confirmed, so adb cannot connect. Restarting the runtime (one cold start) shows the prompt again; once you confirm it, everything recovers.'),
       fix: 'restartRuntime',
     });
   } else if (device.state === 'offline') {
@@ -156,8 +157,8 @@ function evaluate(obs) {
       code: 'device.offline',
       category: 'device',
       severity: 'warn',
-      title: '安卓设备处于 offline 状态',
-      hint: 'adb 能看到设备但连不上，通常是虚拟机还在引导或 adb 服务没握手成功。等一会儿仍不恢复就重启运行时。',
+      title: tr('The Android device is offline'),
+      hint: tr('adb can see the device but cannot connect, usually because the virtual machine is still booting or the adb service did not finish its handshake. If it does not recover after a short wait, restart the runtime.'),
       fix: 'restartRuntime',
     });
   } else if (runtime.running && device.checked && device.state === 'no-device') {
@@ -165,8 +166,8 @@ function evaluate(obs) {
       code: 'device.missing',
       category: 'device',
       severity: 'warn',
-      title: '运行时在跑，但 adb 没看到设备',
-      hint: '安卓进程活着、adb 却看不到设备，多半是 adb 服务端口被别的程序占了，或者引导还没完成。',
+      title: tr('The runtime is running, but adb cannot see the device'),
+      hint: tr('The Android process is alive but adb cannot see the device. Most likely another program is using the adb server port, or boot has not finished yet.'),
       fix: 'restartRuntime',
     });
   }
@@ -179,9 +180,9 @@ function evaluate(obs) {
       code: 'storage.diskCritical',
       category: 'storage',
       severity: 'error',
-      title: '运行时所在磁盘快满了',
-      hint: '剩余空间不足 2 GB，装应用和写快照都会失败。点「一键清理」回收旧镜像、旧快照和日志。',
-      detail: `剩余 ${freeMB} MB`,
+      title: tr('The disk with the runtime is almost full'),
+      hint: tr('Less than 2 GB is free, so installing apps and saving snapshots will fail. Click "Clean up" to reclaim old images, old snapshots and logs.'),
+      detail: tr('{mb} MB free', { mb: freeMB }),
       fix: 'disk',
     });
   } else if (freeMB > 0 && freeMB < 8192) {
@@ -189,9 +190,9 @@ function evaluate(obs) {
       code: 'storage.diskLow',
       category: 'storage',
       severity: 'warn',
-      title: '运行时所在磁盘空间偏紧',
-      hint: '剩余不足 8 GB，快照和系统镜像还需要空间。建议先清理一次可回收文件。',
-      detail: `剩余 ${freeMB} MB`,
+      title: tr('The disk with the runtime is getting low on space'),
+      hint: tr('Less than 8 GB is free, and snapshots and system images still need space. We suggest cleaning up reclaimable files once.'),
+      detail: tr('{mb} MB free', { mb: freeMB }),
       fix: 'disk',
     });
   }
@@ -202,9 +203,9 @@ function evaluate(obs) {
       code: 'storage.dataNeedsReset',
       category: 'storage',
       severity: 'warn',
-      title: '数据分区扩容没有真正生效',
-      hint: '快速启动用的差量盘挡着就地扩容，guest 里看到的还是旧容量。需要「重置安卓数据」后按新容量重建（会清掉已装应用）。',
-      detail: `配置 ${storage.configuredGB} GB · 实际 ${storage.actualGB} GB`,
+      title: tr('The data partition resize did not really take effect'),
+      hint: tr('The delta disk used by quick start blocks resizing in place, so Android still sees the old size. You need to "Reset Android data" to rebuild it at the new size (installed apps will be removed).'),
+      detail: tr('Configured {configured} GB · actual {actual} GB', { configured: storage.configuredGB, actual: storage.actualGB }),
       fix: 'dataReset',
     });
   } else if (Number(storage.configuredGB) > 0 && Number(storage.actualGB) > 0
@@ -213,9 +214,9 @@ function evaluate(obs) {
       code: 'storage.dataMismatch',
       category: 'storage',
       severity: 'error',
-      title: '安卓数据分区比配置的小',
-      hint: '安卓里实际可用容量小于设置里写的值，装大游戏会提示存储空间不足。',
-      detail: `配置 ${storage.configuredGB} GB · 实际 ${storage.actualGB} GB`,
+      title: tr('The Android data partition is smaller than configured'),
+      hint: tr('The capacity Android really has is smaller than the value in Settings, so installing large games will report not enough storage.'),
+      detail: tr('Configured {configured} GB · actual {actual} GB', { configured: storage.configuredGB, actual: storage.actualGB }),
       fix: 'dataReset',
     });
   }
@@ -225,8 +226,8 @@ function evaluate(obs) {
       code: 'storage.sharedBroken',
       category: 'storage',
       severity: 'warn',
-      title: '共享目录不可用',
-      hint: '文件互通用的本机目录不存在或没有写权限，安卓里保存的文件同步不过去。',
+      title: tr('The shared folder is not available'),
+      hint: tr('The folder on this PC used to exchange files does not exist or is not writable, so files saved in Android cannot sync over.'),
       detail: storage.sharedPath || '',
       fix: 'shared',
     });
@@ -241,8 +242,8 @@ function evaluate(obs) {
       code: 'settings.orientationConflict',
       category: 'settings',
       severity: 'warn',
-      title: '屏幕方向策略与当前面板方向相反',
-      hint: '策略要求竖屏，但面板现在是横屏，安卓只会给应用一条窄画面加两侧黑边。把面板方向改成与策略一致即可。',
+      title: tr('The screen orientation policy is opposite to the current panel orientation'),
+      hint: tr('The policy asks for portrait but the panel is landscape, so Android gives apps a narrow picture with black bars on both sides. Make the panel orientation match the policy.'),
       fix: 'orientation',
     });
   } else if (mode === 'landscape' && settings.landscape === false) {
@@ -250,8 +251,8 @@ function evaluate(obs) {
       code: 'settings.orientationConflict',
       category: 'settings',
       severity: 'warn',
-      title: '屏幕方向策略与当前面板方向相反',
-      hint: '策略要求横屏，但面板现在是竖屏，看剧/游戏会是一条竖着的窄画面。把面板方向改成与策略一致即可。',
+      title: tr('The screen orientation policy is opposite to the current panel orientation'),
+      hint: tr('The policy asks for landscape but the panel is portrait, so videos and games show as a narrow vertical picture. Make the panel orientation match the policy.'),
       fix: 'orientation',
     });
   }
@@ -261,8 +262,8 @@ function evaluate(obs) {
       code: 'settings.detachedFullscreen',
       category: 'settings',
       severity: 'info',
-      title: '原生窗口模式下的「启动时自动全屏」不会生效',
-      hint: '原生窗口由模拟器自己开窗，全屏由它自己决定，不受这里的开关控制。想铺满屏幕可在窗口里按 F11，或把窗口承载方式改成嵌入模式。',
+      title: tr('"Fullscreen on start" has no effect in native window mode'),
+      hint: tr('In native window mode the emulator opens its own window and decides fullscreen itself, so this switch does not control it. To fill the screen, press F11 in the window, or switch the window hosting mode to embedded.'),
     });
   }
 
@@ -271,8 +272,8 @@ function evaluate(obs) {
       code: 'settings.snapshotOffLowDisk',
       category: 'settings',
       severity: 'info',
-      title: '磁盘偏紧，快速启动快照已关闭',
-      hint: '当前磁盘余量不到 4 GB，快照又被关掉：打开应用会走一次完整冷启动（十几秒）。磁盘够的话建议重新打开快照。',
+      title: tr('Disk space is low and the quick-start snapshot is turned off'),
+      hint: tr('Less than 4 GB is free and snapshots are off, so opening an app does a full cold start (10 seconds or more). If you have enough disk space, turn snapshots back on.'),
       fix: 'settings',
     });
   }
@@ -287,8 +288,8 @@ function evaluate(obs) {
       code: 'audio.disabled',
       category: 'settings',
       severity: 'warn',
-      title: '安卓应用声音已在设置里关闭',
-      hint: '安卓声音开关被关掉了，所以只有 ApkStart 里的应用没声音。点「处理」重新打开，并重启一次运行时即可。',
+      title: tr('Android app sound is turned off in Settings'),
+      hint: tr('The Android sound switch is off, so only apps inside ApkStart West have no sound. Click "Fix" to turn it back on, then restart the runtime once.'),
       fix: 'audio',
     });
   }
@@ -297,8 +298,8 @@ function evaluate(obs) {
       code: 'audio.windowsServiceStopped',
       category: 'settings',
       severity: 'warn',
-      title: 'Windows 音频服务（Audiosrv）未运行',
-      hint: '这会连系统其它软件一起没声音。到 services.msc 启动 Windows Audio 并设为自动，或在管理员 PowerShell 里执行 net start Audiosrv。',
+      title: tr('The Windows audio service (Audiosrv) is not running'),
+      hint: tr('This silences other software on the PC too. Start Windows Audio in services.msc and set it to automatic, or run net start Audiosrv in an administrator PowerShell.'),
       fix: 'audioService',
     });
   }
@@ -309,8 +310,8 @@ function evaluate(obs) {
       code: 'audio.microphoneDisabled',
       category: 'settings',
       severity: 'warn',
-      title: '麦克风输入已在设置里关闭',
-      hint: '应用里的语音、通话、录音会失败（查不到录音设备）。点「处理」重新打开并重启一次运行时即可；同时确认 Windows 的麦克风权限已允许桌面应用访问。',
+      title: tr('Microphone input is turned off in Settings'),
+      hint: tr('Voice, calls and recording in apps will fail (no recording device is found). Click "Fix" to turn it back on and restart the runtime once; also make sure the Windows microphone permission allows desktop apps.'),
       fix: 'microphone',
     });
   }
@@ -322,8 +323,8 @@ function evaluate(obs) {
       code: 'network.guestDown',
       category: 'network',
       severity: 'warn',
-      title: '安卓里没有网络',
-      hint: '安卓侧解析或联网失败，视频/资讯类应用会一直转圈。可以用「修复网络」重置安卓数据解决（应用清单会保留）。',
+      title: tr('There is no network inside Android'),
+      hint: tr('Android cannot resolve names or connect, so video and news apps keep spinning. Use "Repair network", which resets Android data (your app list is kept).'),
       detail: network.reason || '',
       fix: 'repairNetwork',
     });
@@ -335,9 +336,9 @@ function evaluate(obs) {
       code: 'network.sourcesDown',
       category: 'network',
       severity: 'warn',
-      title: `${badSources.length} 个下载源连不上`,
-      hint: '更新检查会同时问多个源，有一个不通不影响使用；如果全都不通，请检查网络或代理。',
-      detail: badSources.map((s) => s.name).join('、'),
+      title: tr('{n} download sources cannot be reached', { n: badSources.length }),
+      hint: tr('Update checks ask several sources at once, so one being down does not matter; if all of them are down, check your network or proxy.'),
+      detail: badSources.map((s) => s.name).join(', '),
       fix: 'settings',
     });
   }
@@ -350,8 +351,8 @@ function evaluate(obs) {
       code: 'logs.errors',
       category: 'logs',
       severity: 'warn',
-      title: `运行日志里有 ${errLines.length} 条错误`,
-      hint: '最近一次运行留下了错误记录，展开诊断报告可以看到完整上下文。',
+      title: tr('{n} errors in the runtime log', { n: errLines.length }),
+      hint: tr('The latest run left error records; open the diagnostic report to see the full context.'),
       detail: errLines.slice(-1)[0],
       fix: 'report',
     });
@@ -364,8 +365,8 @@ function evaluate(obs) {
       code: 'accel.softwareEmulation',
       category: 'runtime',
       severity: 'warn',
-      title: '当前没有硬件加速',
-      hint: '只能跑纯软件模拟，开机慢到几分钟、画面也容易掉帧。开启「Windows 虚拟机监控程序平台」后重启即可。',
+      title: tr('Hardware acceleration is not available'),
+      hint: tr('Only pure software emulation is possible: booting takes minutes and frames are easily dropped. Turn on "Windows Hypervisor Platform" and restart.'),
       detail: accel.note || '',
       fix: 'virtualization',
     });
@@ -402,7 +403,7 @@ function summarize(issues) {
     const items = list.filter((i) => i.category === c.id);
     return {
       id: c.id,
-      name: c.name,
+      name: tr(c.name),
       count: items.length,
       errors: items.filter((i) => i.severity === 'error').length,
     };
@@ -422,7 +423,7 @@ function summarize(issues) {
 function groupByCategory(issues) {
   const list = dedupe(issues).sort(bySeverity);
   return CATEGORIES.map((c) => ({
-    ...c,
+    ...c, name: tr(c.name), hint: tr(c.hint),
     items: list.filter((i) => i.category === c.id),
   })).filter((g) => g.items.length);
 }
