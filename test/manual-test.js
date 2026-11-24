@@ -46,7 +46,7 @@ test('手册正文包含 0.6.4 版本号与声音章节', () => {
 
 test('手册有 6.8 商店版 DLL 加载失败章节，且纠正一刀切误判', () => {
   assert(html.includes('商店版启动失败'), '手册应有 6.8 章节');
-  assert(/不等于.*VC\+\+|不等于.*运行库|不等于.*杀毒/.test(html.replace(/<[^>]+>/g, '')),
+  assert(/not always mean.*(VC\+\+|antivirus)/.test(html.replace(/<[^>]+>/g, '')),
     '6.8 应明确 0xC0000135 不等于一定缺 VC++');
 });
 
@@ -169,7 +169,7 @@ test('0xC0000135 不再被一刀切成杀毒删 DLL / 缺 VC++', () => {
   const emu = fs.readFileSync(path.join(ROOT, 'src', 'core', 'emulator.js'), 'utf8');
   assert(!/title: '运行时组件被杀毒软件删除或缺少 VC\+\+ 运行库'/.test(doctor), 'doctor 仍在静态归因杀毒/VC++');
   assert(!/缺少 DLL（VC\+\+ 运行库 \/ 运行时组件被杀毒删除）/.test(emu), 'emulator 退出码描述仍在一刀切');
-  assert(/原因待查/.test(emu) && /具体原因待定位/.test(doctor), '应标明原因待定位');
+  assert(/cause still to be found/.test(emu) && /exact cause still to be found/.test(doctor), '应标明原因待定位');
 });
 
 console.log(`\n内置手册测试：${passed} 通过，${failed} 失败\n`);
