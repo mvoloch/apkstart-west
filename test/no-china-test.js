@@ -96,5 +96,23 @@ test('updater and package metadata point at the West repo, not upstream', () => 
   assert.match(src, /REPO\s*=\s*'apkstart-west'/);
 });
 
+test('emulator: no DNS override, and packet capture only when APKSTART_EMULATOR_TCPDUMP is set', () => {
+  const { EmulatorEngine } = require('../src/core/emulator');
+  const emu = new EmulatorEngine(ROOT);
+  const saved = process.env.APKSTART_EMULATOR_TCPDUMP;
+  try {
+    delete process.env.APKSTART_EMULATOR_TCPDUMP;
+    const plain = emu.buildArgs({ gpu: 'software' });
+    assert.ok(!plain.includes('-dns-server'), 'no DNS override');
+    assert.ok(!plain.includes('-tcpdump'), 'no capture by default');
+    process.env.APKSTART_EMULATOR_TCPDUMP = 'C:\\audit\\run.pcap';
+    const audited = emu.buildArgs({ gpu: 'software' });
+    assert.equal(audited[audited.indexOf('-tcpdump') + 1], 'C:\\audit\\run.pcap');
+  } finally {
+    if (saved === undefined) delete process.env.APKSTART_EMULATOR_TCPDUMP;
+    else process.env.APKSTART_EMULATOR_TCPDUMP = saved;
+  }
+});
+
 console.log(`\nResult: ${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
