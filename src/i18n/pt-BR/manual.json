@@ -1,0 +1,17 @@
+{
+  "User manual · Contents": "Manual do usuário · Índice",
+  "Hardware acceleration is off / slow boot": "Aceleração de hardware desativada / inicialização lenta",
+  "Install failed (INSTALL_FAILED_*)": "Falha na instalação (INSTALL_FAILED_*)",
+  "ARM translation layer / ARM apps will not install": "Camada de tradução ARM / apps ARM não instalam",
+  "adb unauthorized (allow USB debugging)": "adb não autorizado (permitir depuração USB)",
+  "Will not open / window with a rotate button": "Não abre / janela com botão de girar",
+  "Other startup problems: quick reference": "Outros problemas de inicialização: consulta rápida",
+  "App has no sound / sound is very quiet": "App sem som / som muito baixo",
+  "Failed to start: 0xC0000135 (DLL load failure)": "Falha ao iniciar: 0xC0000135 (falha ao carregar DLL)",
+  "App cannot use the microphone / cannot record voice": "O app não consegue usar o microfone / não grava voz",
+  "Dedicated / integrated GPU (graphics preference)": "Placa de vídeo dedicada / integrada (preferência gráfica)",
+  "Built-in manual and automatic tutorials": "Manual integrado e tutoriais automáticos",
+  "Settings page guide": "Guia da página de Configurações",
+  "Data and folders": "Dados e pastas",
+  "Automatic checks and network repair": "Verificação automática e reparo da rede"
+}

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual do ApkStart West e guia de solução de problemas</title>
+<style>
+:root{--bg:#ffffff;--fg:#1f2328;--mut:#57606a;--line:#d0d7de;--code:#eff1f3;--accent:#0969da;--accent-soft:#ddf4ff;--warn:#9a6700;--warn-bg:#fff8c5;--head:#f6f8fa;--tbl:#f6f8fa}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--fg);background:var(--bg)}
+.wrap{display:flex;max-width:1180px;margin:0 auto}
+aside{position:sticky;top:0;height:100vh;overflow:auto;width:280px;flex:0 0 280px;border-right:1px solid var(--line);padding:24px 18px;background:var(--head)}
+aside h2{font-size:15px;margin:0 0 14px;letter-spacing:.5px}
+aside a{display:block;color:var(--mut);text-decoration:none;padding:3px 8px;border-radius:6px;font-size:13.5px;line-height:1.45}
+aside a:hover{background:var(--accent-soft);color:var(--accent)}
+#tocSearch{width:100%;margin-bottom:12px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font:13px/1.4 inherit;background:#fff;color:var(--fg)}
+#tocSearch:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.toc-l3{padding-left:22px!important;font-size:12.5px!important;color:#8c959f!important}
+main{flex:1;min-width:0;padding:40px 48px 80px}
+h1{font-size:30px;margin:0 0 8px;padding-bottom:16px;border-bottom:2px solid var(--line)}
+h2{font-size:23px;margin:42px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--line);scroll-margin-top:16px}
+h3{font-size:18px;margin:30px 0 12px;scroll-margin-top:16px}
+h4{font-size:16px;margin:22px 0 8px}
+p{margin:12px 0}
+a{color:var(--accent)}
+code{background:var(--code);padding:2px 6px;border-radius:6px;font:13.5px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+pre{background:var(--code);padding:16px 18px;border-radius:8px;overflow:auto;border:1px solid var(--line)}
+pre code{background:none;padding:0}
+blockquote{margin:16px 0;padding:10px 16px;border-left:4px solid var(--warn);background:var(--warn-bg);color:#633c01;border-radius:0 8px 8px 0}
+blockquote p{margin:0}
+ul,ol{margin:12px 0;padding-left:26px}
+li{margin:5px 0}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.tw{overflow:auto;margin:16px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--tbl);font-weight:600;white-space:nowrap}
+tbody tr:nth-child(even){background:#fbfcfd}
+.btnbar{position:fixed;right:22px;bottom:22px;display:flex;gap:8px}
+.btnbar button{border:1px solid var(--line);background:#fff;color:var(--fg);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.btnbar button:hover{border-color:var(--accent);color:var(--accent)}
+@media (max-width:880px){aside{display:none}main{padding:24px 20px 60px}h1{font-size:25px}}
+@media print{aside,.btnbar{display:none}main{padding:0;max-width:none}h2{page-break-after:avoid}table,pre,blockquote{page-break-inside:avoid}a{color:inherit;text-decoration:none}}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<aside><h2>Índice</h2>
+<input id="tocSearch" type="search" placeholder="Filtrar o índice (Ctrl+F pesquisa o texto todo)" autocomplete="off" />
+<div id="tocList"><a class="toc-l2" href="#目录">Índice</a>
+<a class="toc-l2" href="#1-30-秒看懂-apkstart">1. O ApkStart West em 30 segundos</a>
+<a class="toc-l2" href="#2-安装与首次启动">2. Instalação e primeira inicialização</a>
+<a class="toc-l3" href="#2-1-选择适合你的版本">2.1 Escolha a sua versão</a>
+<a class="toc-l3" href="#2-2-首次启动会发生什么">2.2 O que acontece na primeira inicialização</a>
+<a class="toc-l2" href="#3-日常使用">3. Uso no dia a dia</a>
+<a class="toc-l3" href="#3-1-安装应用">3.1 Instalar apps</a>
+<a class="toc-l3" href="#3-2-打开应用">3.2 Abrir apps</a>
+<a class="toc-l3" href="#3-3-窗口与显示">3.3 Janela e tela</a>
+<a class="toc-l3" href="#3-4-快捷键">3.4 Atalhos de teclado</a>
+<a class="toc-l3" href="#3-5-文件互通-windows-安卓">3.5 Troca de arquivos (Windows ↔ Android)</a>
+<a class="toc-l3" href="#3-6-设置页导航">3.6 Guia da página de Configurações</a>
+<a class="toc-l3" href="#3-7-在线更新">3.7 Atualização online</a>
+<a class="toc-l2" href="#4-理解三个核心概念-看懂报错的关键">4. Três conceitos essenciais (a chave para entender os erros)</a>
+<a class="toc-l3" href="#4-1-运行时-系统镜像">4.1 Runtime / imagem do sistema</a>
+<a class="toc-l3" href="#4-2-硬件加速">4.2 Aceleração de hardware</a>
+<a class="toc-l3" href="#4-3-arm-转译层">4.3 Camada de tradução ARM</a>
+<a class="toc-l2" href="#5-遇到问题先做这一步-体检与自动检测">5. Deu problema? Comece por aqui: verificação do PC e verificação automática</a>
+<a class="toc-l3" href="#5-1-本机体检-自动配置">5.1 Verificação do PC · configuração automática</a>
+<a class="toc-l3" href="#5-2-自动检测-自动-debug">5.2 Verificação automática (auto-debug)</a>
+<a class="toc-l3" href="#5-3-导出诊断报告">5.3 Exportar o relatório de diagnóstico</a>
+<a class="toc-l3" href="#5-4-内置使用手册与自动教程">5.4 Manual integrado e tutoriais automáticos</a>
+<a class="toc-l2" href="#6-常见问题解决方案">6. Soluções para problemas comuns</a>
+<a class="toc-l3" href="#6-1-提示-未启用硬件加速-开机很慢">6.1 Aviso "Aceleração de hardware desativada" / inicialização lenta</a>
+<a class="toc-l3" href="#6-2-安装失败-install_failed_">6.2 Falha na instalação (INSTALL_FAILED_*)</a>
+<a class="toc-l3" href="#6-3-系统镜像没有-arm-转译层-arm-应用装不上或闪退">6.3 A imagem do sistema não tem camada de tradução ARM / app ARM não instala ou fecha sozinho</a>
+<a class="toc-l3" href="#6-4-adb-未授权-允许-usb-调试">6.4 adb não autorizado (permitir depuração USB)</a>
+<a class="toc-l3" href="#6-5-双击图标没反应-一直转圈-出现带旋转按钮的窗口">6.5 Clicar duas vezes no ícone não faz nada / círculo girando sem parar / janela com botão de girar</a>
+<a class="toc-l3" href="#6-6-其它启动类问题速查表">6.6 Outros problemas de inicialização: consulta rápida</a>
+<a class="toc-l3" href="#6-7-应用没有声音-声音很小">6.7 App sem som / som muito baixo</a>
+<a class="toc-l3" href="#6-8-商店版启动失败-0xc0000135-dll-加载失败">6.8 Falha ao iniciar: 0xC0000135 (falha ao carregar DLL)</a>
+<a class="toc-l3" href="#6-9-应用用不到麦克风-无法语音通话录音">6.9 O app não consegue usar o microfone / não grava voz</a>
+<a class="toc-l3" href="#6-10-独显-核显渲染-显卡偏好">6.10 Placa de vídeo dedicada / integrada (preferência gráfica)</a>
+<a class="toc-l2" href="#7-命令行参考">7. Referência da linha de comando</a>
+<a class="toc-l2" href="#8-数据与目录说明">8. Dados e pastas</a>
+<a class="toc-l2" href="#9-获取帮助与反馈">9. Ajuda e feedback</a></div>
+</aside>
+<main>
+<h1 id="apkstart-产品使用手册与问题解决方案">Manual do ApkStart West e guia de solução de problemas</h1>
+<blockquote>Versão: v0.6.4 · Plataforma: Windows 10/11 x64 · Atualização: 2026-11-22  O ApkStart West é um executor de apps Android para Windows: <strong>ele faz os apps Android serem instalados, aparecerem na área de trabalho e abrirem com duplo clique, como programas nativos do Windows.</strong> Este manual primeiro ensina a usar e depois traz soluções passo a passo, organizadas por sintoma. Todos os passos correspondem a botões e menus que existem de verdade no programa.</blockquote>
+<hr/>
+<h2 id="目录">Índice</h2>
+<ol><li><a href="#1-30-秒看懂-apkstart">O ApkStart West em 30 segundos</a></li><li><a href="#2-安装与首次启动">Instalação e primeira inicialização</a></li><li><a href="#3-日常使用">Uso no dia a dia</a></li><li><a href="#4-理解三个核心概念看懂报错的关键">Três conceitos essenciais (a chave para entender os erros)</a></li><li><a href="#5-遇到问题先做这一步体检与自动检测">Deu problema? Comece por aqui: verificação do PC e verificação automática</a></li><li><a href="#6-常见问题解决方案">Soluções para problemas comuns</a></li></ol>
+<ul><li><a href="#61-提示未启用硬件加速--开机很慢">6.1 Aviso "Aceleração de hardware desativada" / inicialização lenta</a></li><li><a href="#62-安装失败install_failed_">6.2 Falha na instalação (INSTALL_FAILED_*)</a></li><li><a href="#63-系统镜像没有-arm-转译层--arm-应用装不上或闪退">6.3 A imagem do sistema não tem camada de tradução ARM / app ARM não instala ou fecha sozinho</a></li><li><a href="#64-adb-未授权允许-usb-调试">6.4 adb não autorizado (permitir depuração USB)</a></li><li><a href="#65-双击图标没反应--一直转圈--出现带旋转按钮的窗口">6.5 Clicar duas vezes no ícone não faz nada / círculo girando sem parar / janela com botão de girar</a></li><li><a href="#66-其它启动类问题速查表">6.6 Outros problemas de inicialização: consulta rápida</a></li><li><a href="#67-应用没有声音--声音很小">6.7 App sem som / som muito baixo</a></li><li><a href="#68-商店版启动失败--0xc0000135dll-加载失败">6.8 Falha ao iniciar: 0xC0000135 (falha ao carregar DLL)</a></li><li><a href="#69-应用用不到麦克风--无法语音通话录音">6.9 O app não consegue usar o microfone / não grava voz</a></li><li><a href="#610-独显--核显渲染显卡偏好">6.10 Placa de vídeo dedicada / integrada (preferência gráfica)</a></li></ul>
+<ol><li><a href="#7-命令行参考">Referência da linha de comando</a></li><li><a href="#8-数据与目录说明">Dados e pastas</a></li><li><a href="#9-获取帮助与反馈">Ajuda e feedback</a></li></ol>
+<hr/>
+<h2 id="1-30-秒看懂-apkstart">1. O ApkStart West em 30 segundos</h2>
+<pre><code>Ícone na área de trabalho (o ícone real do app, um atalho .lnk)
+      │ duplo clique
+      ▼
+ApkStart.exe --launch &lt;nome do pacote&gt;
+      │ O runtime do Android não está aberto? → inicia sozinho (emulador Android 14, incluído no pacote ou baixado na primeira inicialização)
+      ▼
+Abre o app pela entrada de inicialização resolvida pelo sistema (não pela Activity principal fixada no APK)
+      ▼
+Janela do emulador = janela do app (título próprio, ícone, proporção retrato, tela cheia centralizada)</code></pre>
+<p><strong>O que o diferencia</strong></p>
+<ul><li>🖱️ <strong>Clique duas vezes em um .apk para instalar</strong>: depois de registrar a associação de arquivos, o duplo clique em um APK lê o pacote, instala e cria um ícone na área de trabalho.</li><li>🧩 <strong>Um ícone na área de trabalho para cada app</strong>: o ícone é extraído offline de dentro do APK, e o duplo clique nele abre o app direto.</li><li>🪟 <strong>O app é só uma janela</strong>: renderização nativa, a tela cheia ocupa a altura da tela e fica centralizada, o modo janela pode ser arrastado e redimensionado, e cada app lembra o próprio tamanho.</li><li>🔍 <strong>Aparece na busca do Windows</strong>: dois atalhos, um na área de trabalho e outro no menu Iniciar (<code>Programas\ApkStart West\</code>).</li><li>📁 <strong>Dados compartilhados</strong>: <code>%USERPROFILE%\ApkStartShared</code> ↔ <code>/sdcard/ApkStartShared</code> dentro do Android, sincronizados nos dois sentidos.</li><li>🪶 <strong>Runtime próprio</strong>: não depende de nenhum emulador instalado no seu PC (BlueStacks, WSA etc.).</li></ul>
+<blockquote>Nota: este projeto é uma versão inicial, mantida no tempo livre, de código aberto, gratuita e sem anúncios. É normal encontrar problemas, e este manual existe para isso.</blockquote>
+<hr/>
+<h2 id="2-安装与首次启动">2. Instalação e primeira inicialização</h2>
+<h3 id="2-1-选择适合你的版本">2.1 Escolha a sua versão</h3>
+<p>Baixe em:</p>
+<ul><li>GitHub: <code>github.com/mvoloch/apkstart-west/releases</code></li></ul>
+<div class="tw"><table><thead><tr><th>Versão</th><th>Nome do arquivo</th><th>Quando escolher</th></tr></thead><tbody><tr><td><strong>Versão portátil completa</strong></td><td><code>ApkStart-v*-win64-full.zip</code> (cerca de 830 MB, ~1,3 GB descompactada)</td><td>Você não quer instalar nem esperar downloads: descompacte e use, o runtime inteiro está no pacote</td></tr><tr><td><strong>Versão com instalador</strong></td><td><code>ApkStart-v*-Setup.exe</code> (cerca de 1,3 GB)</td><td>Você quer atalhos na área de trabalho e no menu Iniciar e uma entrada para desinstalar</td></tr><tr><td><strong>Versão portátil leve</strong></td><td><code>ApkStart-v*-win64-portable.zip</code> (96 MiB, ~227 MB descompactada)</td><td>Você só quer experimentar: o runtime é baixado na primeira inicialização</td></tr></tbody></table></div>
+<blockquote>⚠️ <strong>Use sempre a versão mais recente (atualmente 0.6.4)</strong>. As versões antigas (0.5.x e anteriores) ou não tinham o runtime incluído e procuravam ou baixavam um runtime de 1,5 GB a cada inicialização, ou usavam a janela incorporada por padrão. Essa é a origem típica de "muito lento, não abre, aparece uma janela com botão de girar". Se você atualizou de uma versão antiga, confira se os ícones da área de trabalho apontam para a pasta do programa novo.</blockquote>
+<h3 id="2-2-首次启动会发生什么">2.2 O que acontece na primeira inicialização</h3>
+<ol><li><strong>(Só na versão leve) Baixar o runtime</strong>: adb, o Android Emulator e a imagem do sistema Android 14, baixados em 8 partes simultâneas e com retomada de download. A versão completa pula esta etapa.</li><li><strong>Descompactar a imagem na primeira vez</strong>: a imagem xz é descompactada em <code>%APPDATA%\apkstart-west\system-images</code> (cerca de 20 segundos, só uma vez).</li><li><strong>Criar o <code>/data</code> na primeira vez</strong>: o ApkStart West gera por conta própria os dados de usuário em ext4, com criptografia e rótulos SELinux (a imagem oficial traz só um espaço reservado de 1 MB).</li><li><strong>Inicialização automática</strong>: depois disso, abrir um app é só um <code>am start</code>. A inicialização a frio leva cerca de 23 segundos, e com snapshot cerca de 10 segundos.</li></ol>
+<blockquote>É normal a primeira inicialização ser lenta: é um "custo único". Depois, os apps abrem em segundos.</blockquote>
+<hr/>
+<h2 id="3-日常使用">3. Uso no dia a dia</h2>
+<h3 id="3-1-安装应用">3.1 Instalar apps</h3>
+<p>Escolha uma das três formas:</p>
+<ul><li><strong>Clicar duas vezes em um arquivo APK</strong> (registre a associação antes: Configurações → Integração e arquivos → Associar arquivos .apk);</li><li>Escolher "Instalar app" na janela principal;</li><li>Linha de comando: <code>ApkStart.exe &lt;caminho\do.apk&gt;</code>.</li></ul>
+<p>Os pacotes divididos <code>.apks</code> / <code>.xapk</code> são aceitos (o <code>install-multiple</code> é usado automaticamente). Depois de instalar, os atalhos da área de trabalho e do menu Iniciar são criados automaticamente.</p>
+<h3 id="3-2-打开应用">3.2 Abrir apps</h3>
+<p>Basta clicar duas vezes no ícone da área de trabalho. Todos os apps compartilham o mesmo runtime, então <strong>o segundo app abre quase na hora</strong>.</p>
+<h3 id="3-3-窗口与显示">3.3 Janela e tela</h3>
+<div class="tw"><table><thead><tr><th>Ação</th><th>Como</th></tr></thead><tbody><tr><td>Alternar tela cheia / janela</td><td><code>F11</code> ou o menu da bandeja (clique com o botão direito). A tela cheia só aumenta a janela e não muda a proporção da imagem</td></tr><tr><td>Girar retrato / paisagem</td><td><code>Ctrl+Alt+R</code> (global) ou o botão de girar na barra de título; a orientação fica memorizada para aquele app</td></tr><tr><td>Tela cheia automática</td><td>Configurações → Tela e janelas → Tela cheia automática (funciona melhor junto com "Forçar orientação")</td></tr><tr><td>Forçar paisagem / retrato</td><td>Configurações → Tela e janelas → Orientação da tela</td></tr></tbody></table></div>
+<blockquote>O runtime só reinicia na única vez em que "a orientação do painel e a do app são diferentes" (cerca de 40 segundos, a barra de título mostra um aviso). Depois disso, os apps com a mesma orientação abrem em segundos.</blockquote>
+<h3 id="3-4-快捷键">3.4 Atalhos de teclado</h3>
+<div class="tw"><table><thead><tr><th>Tecla</th><th>O que faz</th></tr></thead><tbody><tr><td><code>F11</code></td><td>Alterna entre tela cheia e modo janela</td></tr><tr><td><code>Ctrl+Alt+R</code></td><td>Gira o app atual entre paisagem e retrato</td></tr><tr><td><code>Ctrl+R</code></td><td>Gira dentro da janela do shell (no modo de janela nativa use <code>Ctrl+Alt+R</code>)</td></tr></tbody></table></div>
+<h3 id="3-5-文件互通-windows-安卓">3.5 Troca de arquivos (Windows ↔ Android)</h3>
+<p>A pasta <code>%USERPROFILE%\ApkStartShared</code> do PC e a pasta <code>/sdcard/ApkStartShared</code> dentro do Android sincronizam nos dois sentidos em poucos segundos. Onde: Configurações → Integração e arquivos → Troca de arquivos (você pode usar "Sincronizar agora" ou "Abrir pasta").</p>
+<h3 id="3-6-设置页导航">3.6 Guia da página de Configurações</h3>
+<p>Desde a versão 0.6.0, as configurações se dividem em oito categorias, com uma caixa de busca no topo (digite uma palavra como "paisagem", "memória" ou "proxy" e ela encontra resultados em todas as categorias):</p>
+<div class="tw"><table><thead><tr><th>Categoria</th><th>Conteúdo principal</th></tr></thead><tbody><tr><td>Básico e instalação</td><td>Runtime e ambiente, configuração com um clique, iniciar com o Windows, uso de disco e limpeza</td></tr><tr><td>Tela e janelas</td><td>Modo de exibição, tela cheia automática, orientação da tela, layout de tablet, modo de hospedagem da janela</td></tr><tr><td>Controles e entrada</td><td>Mapeamento de teclas do mouse, mapeamento do teclado, teclado chinês opcional (desativado por padrão)</td></tr><tr><td>Desempenho e recursos</td><td>Política de recursos, preferência de placa de vídeo (dedicada / integrada), microfone, qualidade de imagem, partição de dados, idioma do sistema, snapshots, pré-aquecimento da inicialização</td></tr><tr><td>Rede e downloads</td><td>Atualizações e fonte de download, número de threads de download</td></tr><tr><td>Diagnóstico e reparo</td><td>Verificação do PC, drivers / correções de compatibilidade, verificação automática</td></tr><tr><td>Integração e arquivos</td><td>Área de trabalho e apps, troca de arquivos, integração com o sistema</td></tr><tr><td>Atualizações e sobre</td><td>Atualização do programa, sobre</td></tr><tr><td>Laboratório</td><td>Várias instâncias em janelas nativas do Windows (experimental), número de apps mantidos em segundo plano</td></tr></tbody></table></div>
+<blockquote><strong>Padrões</strong>: o Android roda em inglês (você pode mudar o idioma do sistema em Configurações → Desempenho e recursos), usa o fuso horário do seu PC, e o teclado chinês é opcional e fica desativado.</blockquote>
+<blockquote><strong>Laboratório · várias instâncias (experimental)</strong>: quando ativado, abrir um novo app não fecha mais o anterior à força. Vários apps podem ficar em segundo plano e você volta a eles quando quiser, com o login mantido. Como o runtime do Android tem só uma janela de emulador, apenas a imagem de um app fica na frente por vez, então não são janelas lado a lado de verdade, e o uso de memória aumenta. Fica desativado por padrão; ignore se você quer o máximo de estabilidade.</blockquote>
+<h3 id="3-7-在线更新">3.7 Atualização online</h3>
+<p>Configurações → Atualizações e sobre → Verificar atualizações, ou menu da bandeja (botão direito) → Verificar atualizações. As atualizações vêm dos Releases do GitHub e são baixadas em partes simultâneas. Atualizar não apaga o seu runtime, os apps instalados nem os snapshots.</p>
+<p>A versão portátil aceita <strong>atualização incremental</strong>: cada lançamento publica também uma "lista de código" e um pacote pequeno só com o código do programa (alguns MB, enquanto o pacote inteiro tem cerca de 100 MB). Se a versão do shell Electron não mudou, a atualização baixa só esse pacote pequeno, confere arquivo por arquivo e substitui o código do programa, o que leva poucos segundos. Se a versão do shell mudou, se a lista estiver ausente ou se qualquer verificação falhar, ele volta automaticamente a baixar o pacote completo, então uma atualização não estraga o programa.</p>
+<blockquote>Nota: a atualização incremental vale para quem instalou a versão portátil por meio de "Verificar atualizações". Ela não afeta os apps instalados, os dados do Android, o runtime nem os snapshots.</blockquote>
+<hr/>
+<h2 id="4-理解三个核心概念-看懂报错的关键">4. Três conceitos essenciais (a chave para entender os erros)</h2>
+<p>A maioria dos "problemas estranhos" vem de uma destas três coisas. Gaste um minuto para entendê-las e o diagnóstico fica bem mais fácil.</p>
+<h3 id="4-1-运行时-系统镜像">4.1 Runtime / imagem do sistema</h3>
+<p>O ApkStart West não emula um "Android vazio". Ele carrega como base uma <strong>imagem completa do sistema Android 14</strong>. Desde a 0.6.3 existe apenas <strong>uma imagem genérica</strong> (Google Play x86_64), e tanto os apps x86 quanto os ARM rodam nela. A antiga divisão em "imagem AOSP / imagem de compatibilidade" acabou.</p>
+<ul><li>Imagem ausente ou corrompida, ou incompatível com dados de usuário antigos → falha na inicialização, travamento na inicialização, reinícios repetidos.</li><li>Os dados de usuário (<code>/data</code>) são uma camada fina de diferenças, e a imagem do sistema é compartilhada uma única vez por todo o PC.</li></ul>
+<h3 id="4-2-硬件加速">4.2 Aceleração de hardware</h3>
+<p>Para o emulador rodar rápido, ele precisa da aceleração de virtualização da CPU. No Windows há só dois caminhos:</p>
+<div class="tw"><table><thead><tr><th>Método</th><th>O que é</th><th>Quem precisa de administrador</th><th>Precisa reiniciar depois?</th></tr></thead><tbody><tr><td><strong>WHPX</strong></td><td>O recurso do Windows "Plataforma do Hipervisor do Windows" (HypervisorPlatform)</td><td>Ao ativar o recurso</td><td>Sim</td></tr><tr><td><strong>AEHD</strong></td><td>Driver de kernel do próprio Google</td><td>Ao instalar o driver</td><td>Não</td></tr></tbody></table></div>
+<p><strong>Também roda sem aceleração</strong> (emulação por software pura, TCG), mas a inicialização leva minutos e a imagem perde quadros. Isso é "lento", não "falha ao iniciar". O ApkStart West volta sozinho para esse modo e tenta de novo com até 4 conjuntos de parâmetros, na ordem "backend de renderização → método de aceleração → memória / inicialização a frio".</p>
+<blockquote>Não trate a <strong>VirtualMachinePlatform</strong> (usada pelo WSL2) como a chave da aceleração. O emulador precisa da <strong>HypervisorPlatform</strong>. Se você ativar só a primeira, o <code>emulator -accel-check</code> continua dizendo que não está disponível.</blockquote>
+<h3 id="4-3-arm-转译层">4.3 Camada de tradução ARM</h3>
+<p>Muitos apps Android trazem só <strong>bibliotecas nativas ARM</strong> (arm64-v8a / armeabi-v7a), enquanto a imagem do sistema é <strong>x86_64</strong>. É preciso uma "camada de tradução" para entregar as instruções ARM à CPU x86. A imagem genérica da 0.6.3 já inclui uma camada <code>ndk_translation</code> recente, então instalar apps ARM normalmente não exige nenhuma configuração.</p>
+<ul><li>Na primeira vez que aparece um app ARM, se o componente da camada de tradução ainda não estiver no lugar, o ApkStart West completa sozinho a imagem de compatibilidade e reinicia o runtime para tentar de novo (veja 6.3).</li><li>As imagens antigas (API 30) têm problemas de compatibilidade com a nova camada de tradução (por exemplo, alguns apps disparam <code>DoBadTrampoline</code> SIGABRT). A imagem Android 14 corrige isso.</li></ul>
+<hr/>
+<h2 id="5-遇到问题先做这一步-体检与自动检测">5. Deu problema? Comece por aqui: verificação do PC e verificação automática</h2>
+<p>Antes de ler este manual, deixe o programa se verificar sozinho. Ele corrige a maioria dos problemas automaticamente.</p>
+<h3 id="5-1-本机体检-自动配置">5.1 Verificação do PC · configuração automática</h3>
+<p>Onde: Configurações → Diagnóstico e reparo → <strong>Iniciar verificação</strong></p>
+<ul><li>O que verifica: se a virtualização da CPU (VT-x/SVM) está ativada, se o Hyper-V / plataforma do hipervisor está disponível, placa de vídeo / memória de vídeo / driver, memória, versão do Windows, <code>emulator -accel-check</code>, o driver AEHD.</li><li>Clique em "<strong>Aplicar configuração recomendada</strong>" para gravar automaticamente os itens seguros: memória / número de núcleos / resolução de renderização / qualidade de imagem / forçar emulação por software quando não há aceleração. Tudo é salvo como um driver para este PC e aplicado automaticamente daí em diante.</li><li>Níveis do resultado: <code>ok</code> (normal) / <code>warn</code> (funciona, mas dá para melhorar) / <code>bad</code> (não roda se não for corrigido). Cada linha tem uma cor e uma explicação.</li></ul>
+<p>Só dois tipos de coisa exigem que você mesmo aja:</p>
+<ul><li><strong>Virtualização na BIOS</strong>: reinicie e entre na BIOS → ative Intel VT-x / AMD SVM → Enabled (o programa não consegue fazer isso por você).</li><li><strong>Recurso do Windows / driver de aceleração</strong>: veja 6.1.</li></ul>
+<h3 id="5-2-自动检测-自动-debug">5.2 Verificação automática (auto-debug)</h3>
+<p>Onde: Configurações → Diagnóstico e reparo → "Verificação automática · diagnóstico inteligente"</p>
+<p>Em segundo plano, ele verifica o PC a cada 10 minutos e lista os problemas em seis categorias. Cada um pode ser tratado com <strong>um clique</strong> (reiniciar o runtime, limpar travas, limpar processos órfãos, descartar o snapshot, limpar o disco, redefinir a rede do Android etc.), e depois da correção ele verifica de novo automaticamente:</p>
+<div class="tw"><table><thead><tr><th>Categoria</th><th>Problemas cobertos</th></tr></thead><tbody><tr><td>Runtime</td><td>A causa real da última falha ao iniciar, travamento na inicialização, arquivos de trava restantes, processos órfãos do emulador, snapshot vazio, sem aceleração de hardware</td></tr><tr><td>Conexão do dispositivo</td><td>adb não autorizado, offline, runtime em execução mas o adb não vê o dispositivo</td></tr><tr><td>Armazenamento</td><td>Espaço livre em disco, configuração da partição de dados diferente da real, pasta compartilhada sem permissão de escrita</td></tr><tr><td>Configurações</td><td>Orientação da tela em conflito com o painel físico, tela cheia automática sem efeito em janela separada</td></tr><tr><td>Rede / logs</td><td>Sem rede no lado do Android, fonte de download inacessível, erros nos logs recentes</td></tr></tbody></table></div>
+<blockquote>Dois princípios: uma sondagem que falha nunca é tratada como problema (se não for possível ler o estado, ele diz "não sei" e nunca chuta), e o mesmo problema antigo não fica incomodando você repetidamente.</blockquote>
+<h3 id="5-3-导出诊断报告">5.3 Exportar o relatório de diagnóstico</h3>
+<p>Onde: Configurações → Diagnóstico e reparo → <strong>Exportar relatório de diagnóstico</strong> (ou o botão de mesmo nome na página de Integração e arquivos)</p>
+<p>O relatório é texto simples. Ele traz a configuração do PC, os parâmetros de inicialização escolhidos automaticamente, os logs e as conclusões do diagnóstico. Anexe-o ao relatar um problema e a causa será encontrada bem mais rápido.</p>
+<h3 id="5-4-内置使用手册与自动教程">5.4 Manual integrado e tutoriais automáticos</h3>
+<p>Desde a 0.6.3, este manual está <strong>embutido no programa</strong>: o botão "?" na barra de título da janela principal e "Abrir manual do usuário" em Configurações → Atualizações e sobre abrem o manual direto. Dá para pesquisar, rolar e imprimir / salvar como PDF. Ao abrir, ele vai sozinho ao capítulo relacionado ao problema atual.</p>
+<p>A verificação e o reparo automáticos também levam o tutorial até você:</p>
+<ul><li>Quando uma verificação automática encontra um problema, o item tem um botão "Tutorial" à direita que abre o capítulo correspondente;</li><li>Em problemas de aceleração de hardware, falha na instalação, camada de tradução ARM, autorização do adb, falta de som e semelhantes, <strong>quando a correção automática falha, o tutorial correspondente abre sozinho</strong>, então você não precisa vir procurar aqui;</li><li>O mesmo tutorial só abre automaticamente uma vez por execução, para não ficar interrompendo você.</li></ul>
+<blockquote>Para abrir manualmente: o botão <code>?</code> na barra de título. Para parar a abertura automática por ora, desative as notificações nas configurações da verificação automática. Você ainda pode abrir o tutorial pelo botão "Tutorial" de qualquer item de problema.</blockquote>
+<hr/>
+<h2 id="6-常见问题解决方案">6. Soluções para problemas comuns</h2>
+<h3 id="6-1-提示-未启用硬件加速-开机很慢">6.1 Aviso "Aceleração de hardware desativada" / inicialização lenta</h3>
+<p><strong>Sintoma</strong>: as Configurações / o diagnóstico dizem "no momento não há aceleração de hardware" ou "aceleração de hardware indisponível"; a inicialização leva minutos e a imagem perde quadros.</p>
+<p><strong>Primeiro, entenda</strong>: normalmente isso é "lento", não "não abre". O ApkStart West já voltou para a emulação por software. Você só precisa da aceleração se quiser desempenho fluido.</p>
+<p><strong>O que fazer:</strong></p>
+<ul><li>Configurações → Diagnóstico e reparo → Verificação do PC → encontre "Aceleração de hardware desativada" → clique em <strong>Corrigir</strong>. Aparece uma vez o aviso do UAC e o WHPX é ativado automaticamente. Se não for possível ativá-lo (o sistema não aceita ou você respondeu que não), o driver AEHD é instalado no lugar.</li><li>Para fazer manualmente, abra a janela "Ativar ou desativar recursos do Windows":</li></ul>
+<p>1. Marque <strong>"Plataforma do Hipervisor do Windows" (HypervisorPlatform)</strong>; 2. clique em OK e <strong>reinicie o PC</strong> uma vez.</p>
+<p>Você também pode executar isto em um <strong>PowerShell como administrador</strong>:</p>
+<pre><code>dism /online /enable-feature /featurename:HypervisorPlatform /all /norestart
+dism /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart</code></pre>
+<blockquote>Duas armadilhas: ① não ative só a VirtualMachinePlatform, essa não é a aceleração que o emulador precisa; ② se o VT-x/SVM não estiver ativado na BIOS, entre primeiro na BIOS conforme o 5.1, senão o recurso do Windows não adianta nada mesmo ativado. Se o driver da placa de vídeo tem mais de 3 anos, atualize pelo site do fabricante; o ApkStart West nunca instala drivers automaticamente (um driver errado é pior). Algumas placas de vídeo / GPUs integradas antigas precisam de uma correção de compatibilidade, veja Configurações → Diagnóstico e reparo → Drivers · correções de compatibilidade.</blockquote>
+<hr/>
+<h3 id="6-2-安装失败-install_failed_">6.2 Falha na instalação (INSTALL_FAILED_*)</h3>
+<p><strong>Sintoma</strong>: aparece um erro ao instalar um app. A mensagem normalmente começa com "Falha na instalação" e termina com um código de erro <code>INSTALL_*</code>.</p>
+<p>O ApkStart West explica em linguagem simples o erro original em inglês. Use a tabela abaixo:</p>
+<div class="tw"><table><thead><tr><th>Código de erro</th><th>Significado</th><th>O que fazer</th></tr></thead><tbody><tr><td><code>INSTALL_FAILED_NO_MATCHING_ABIS</code></td><td>O app só tem bibliotecas ARM e a imagem atual não tem camada de tradução ARM</td><td><strong>Normalmente é tratado automaticamente</strong>: o ApkStart West troca para a imagem de compatibilidade e tenta de novo. Veja <a href="#63-系统镜像没有-arm-转译层--arm-应用装不上或闪退">6.3</a></td></tr><tr><td><code>INSTALL_FAILED_OLDER_SDK</code></td><td>O app exige uma versão mais nova do Android</td><td>Precisa de uma imagem de sistema mais nova; a atual é Android 14 (API 34), então raramente acontece</td></tr><tr><td><code>INSTALL_PARSE_FAILED_NO_CERTIFICATES</code></td><td>O APK não tem assinatura válida</td><td>O APK está corrompido ou não é um pacote legítimo, obtenha o instalador de novo</td></tr><tr><td><code>INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES</code> / <code>INSTALL_FAILED_UPDATE_INCOMPATIBLE</code></td><td>A assinatura é diferente da versão instalada</td><td>Desinstale a versão antiga primeiro e depois instale</td></tr><tr><td><code>INSTALL_FAILED_VERSION_DOWNGRADE</code></td><td>Já há uma versão mais alta instalada no dispositivo</td><td>Não dá para sobrescrever com uma versão mais baixa; instale uma versão mais alta ou desinstale primeiro</td></tr><tr><td><code>INSTALL_FAILED_INSUFFICIENT_STORAGE</code></td><td>Espaço em disco insuficiente para o runtime</td><td>Libere espaço em disco ou mova a pasta de dados do runtime para uma unidade com espaço suficiente (Configurações → Integração e arquivos)</td></tr><tr><td><code>INSTALL_FAILED_INVALID_APK</code></td><td>O APK está corrompido / incompleto</td><td>O download pode não ter terminado, baixe de novo</td></tr><tr><td><code>INSTALL_FAILED_INVALID_URI</code></td><td>O caminho do APK tem caracteres especiais ou fora do padrão ASCII</td><td>Mova o APK para um caminho simples, só com letras comuns, e instale de novo</td></tr><tr><td><code>INSTALL_FAILED_ALREADY_EXISTS</code></td><td>Já existe um app com o mesmo nome e assinatura diferente</td><td>Desinstale-o primeiro</td></tr><tr><td><code>INSTALL_FAILED_DEPRECATED_SDK_VERSION</code></td><td>O app foi feito para um Android muito antigo</td><td><strong>Tratado automaticamente</strong>: o ApkStart West tenta de novo com a opção oficial de contorno</td></tr><tr><td><code>INSTALL_FAILED_TEST_ONLY</code></td><td>Pacote só para testes</td><td><strong>Tratado automaticamente</strong>: ele tenta de novo com a opção de pacote de teste</td></tr><tr><td><code>INSTALL_FAILED_MISSING_SHARED_LIBRARY</code></td><td>Um recurso do dispositivo / biblioteca do fabricante exigido não existe</td><td>O app depende de um ambiente específico do fabricante que o emulador não consegue oferecer</td></tr><tr><td><code>INSTALL_FAILED_USER_RESTRICTION</code></td><td>O sistema restringe a instalação</td><td>Reinicie o runtime e tente de novo</td></tr><tr><td><code>INSTALL_FAILED_CONFLICTING_PROVIDER</code></td><td>Conflito com o ContentProvider de um app existente</td><td>Desinstale o app em conflito</td></tr><tr><td><code>INSTALL_FAILED_INTERNAL_ERROR</code></td><td>Erro interno do sistema (geralmente pouco espaço ou inicialização incompleta)</td><td>Reinicie o runtime, espere a inicialização terminar e tente de novo</td></tr></tbody></table></div>
+<blockquote>Se o erro original não estiver na tabela acima, exporte um relatório de diagnóstico como em 5.3 e envie com o seu feedback.</blockquote>
+<hr/>
+<h3 id="6-3-系统镜像没有-arm-转译层-arm-应用装不上或闪退">6.3 A imagem do sistema não tem camada de tradução ARM / app ARM não instala ou fecha sozinho</h3>
+<p><strong>Sintoma</strong>: a instalação mostra <code>INSTALL_FAILED_NO_MATCHING_ABIS</code> e a mensagem diz que o app só tem bibliotecas nativas ARM e que a imagem atual do sistema não tem camada de tradução ARM; ou o app instala mas fecha logo ao iniciar, e o log mostra <code>DoBadTrampoline</code>, <code>libndk_translation</code>, <code>UnsatisfiedLinkError</code> ou <code>...so not found</code>.</p>
+<p><strong>Por quê</strong>: a 0.6.3 usa <strong>uma imagem genérica do Android 14</strong> para x86 e ARM, e a camada de tradução já vem incluída. As versões antigas exigiam trocar de imagem manualmente. A chave "Imagem genérica de compatibilidade (gerenciada automaticamente)" agora <strong>só existe por compatibilidade com configurações antigas e normalmente não precisa ser mexida</strong>.</p>
+<p><strong>O que o ApkStart West faz automaticamente:</strong></p>
+<ol><li>Se a instalação mostrar <code>NO_MATCHING_ABIS</code>, ele troca para a imagem de compatibilidade → reinicia o runtime → devolve os apps instalados a partir dos backups locais dos APKs → instala de novo (o log diz que está trocando para a imagem de compatibilidade e reiniciando o runtime).</li><li>Se um app fecha ao iniciar e o log aponta claramente para a camada de tradução ARM (como <code>DoBadTrampoline</code>), ele troca para a imagem de compatibilidade Android 14 e tenta de novo (o log diz que detectou uma falha da camada de tradução ARM).</li></ol>
+<p><strong>O que você precisa fazer:</strong></p>
+<ul><li><strong>Ter paciência</strong>: trocar de imagem reinicia o runtime, o que leva de cerca de 40 segundos a 1 minuto, e você pode ver uma janela de aviso nesse tempo.</li><li><strong>Conferir se a imagem está no lugar</strong>: Configurações → Básico e instalação → Runtime, veja o estado de "Imagem genérica de compatibilidade (gerenciada automaticamente)". Se mostrar que não foi baixada, clique em "Baixar imagem de compatibilidade" (cerca de 1,5 GB) e depois <strong>reinicie o runtime</strong> para valer.</li><li><strong>Continua fechando</strong>: alguns apps têm verificações anti-emulador mais profundas (exigem sensores reais, baseband etc.) e não conseguem rodar em emulador. Para esses, o programa mostra uma explicação; é uma limitação, não uma falha.</li></ul>
+<p><strong>E se aparecer um "Falha na instalação" em vermelho, mas a mensagem disser que está "trocando para a imagem de compatibilidade e tentará de novo"?</strong></p>
+<p>Era um erro de exibição de uma versão antiga: o arquivo da imagem estava no disco, mas foi reaproveitado com um runtime antigo sem camada de tradução, então a troca com nova tentativa foi pulada e a falha foi informada direto, enquanto a mensagem continuava dizendo "tentando de novo". <strong>Você não está com o código mais recente, atualize para a compilação mais recente da 0.6.4</strong> (a versão descrita por este manual já corrigiu isso: antes de instalar, ele sonda a capacidade real de tradução do runtime atual em vez de só ver se o arquivo da imagem existe; <code>NO_MATCHING_ABIS</code> sempre dispara troca + reinício + limpeza do snapshot antigo + nova instalação; e se falhar uma segunda vez ele conta a verdade em vez de afirmar falsamente que está tentando de novo). Depois de atualizar, instale de novo.</p>
+<blockquote>Testado: um app que traz só bibliotecas arm64-v8a instala, abre e reproduz vídeo normalmente na imagem Android 14 com a nova camada de tradução. O runtime atual informa <code>ro.product.cpu.abilist</code> = <code>x86_64,arm64-v8a</code>, o que significa que a camada de tradução está ativa.</blockquote>
+<hr/>
+<h3 id="6-4-adb-未授权-允许-usb-调试">6.4 adb não autorizado (permitir depuração USB)</h3>
+<p><strong>Sintoma</strong>: o diagnóstico informa "adb não autorizado" ou "autorização de depuração do Android não concluída", o <code>adb devices</code> mostra <code>unauthorized</code> e o app nunca inicia.</p>
+<p><strong>O jeito certo (em ordem):</strong></p>
+<ol><li>Procure uma janela do emulador mostrando o diálogo <strong>"Permitir depuração USB?"</strong>. Vá até essa janela e clique em <strong>Permitir</strong>, e marque <strong>"Sempre permitir neste computador"</strong> para ele nunca mais perguntar.</li><li>Se a janela não responde ao clique ou nunca aparece: Configurações → Básico e instalação → <strong>Redefinir dados do Android / Limpar dados do Android</strong> e tente de novo (isso remove os apps instalados; os arquivos APK são mantidos e reinstalados automaticamente, e o sistema em si não é afetado).</li></ol>
+<blockquote>⚠️ <strong>Nunca apague o <code>%USERPROFILE%\.android\adbkey</code></strong>. Na prática isso é o contrário do que você quer: o Android só grava uma nova chave pública quando o arquivo <code>adb_keys</code> não existe. Se você trocar para uma nova chave privada, a chave pública antiga guardada no sistema continua valendo, as duas não combinam e a autorização nunca será concluída.</blockquote>
+<blockquote><p>Verificação pela linha de comando: o servidor adb do ApkStart West roda em uma <strong>porta exclusiva, a 5044</strong> (totalmente separada da sua própria 5037):</p>
+<pre><code>$env:ANDROID_ADB_SERVER_PORT = 5044
+adb devices    # você deve ver emulator-5554</code></pre>
+<p>Não execute <code>adb connect</code> manualmente na porta 5555: a imagem Play mostra um aviso "Permitir depuração USB" por cima do app, e parece que o programa quebrou.</p></blockquote>
+<hr/>
+<h3 id="6-5-双击图标没反应-一直转圈-出现带旋转按钮的窗口">6.5 Clicar duas vezes no ícone não faz nada / círculo girando sem parar / janela com botão de girar</h3>
+<p>Problemas assim quase sempre apontam para a <strong>entrada de inicialização ou para a tomada da janela</strong>. Verifique na ordem abaixo.</p>
+<p><strong>① Confirme que você está usando a versão nova</strong></p>
+<ul><li>Abra o log <code>%APPDATA%\apkstart-west\logs\app.log</code> e veja o início: <code>start v0.6.4</code> é o correto. Se mostrar <code>v0.5.x</code>, os ícones da área de trabalho / do menu Iniciar apontam para uma pasta antiga.</li><li>A versão antiga (0.5.x) não tem runtime incluído e usa a janela incorporada por padrão → "muito lento + uma janela de shell com botão de girar". Mude para a 0.6.4 e aponte os atalhos para o novo <code>ApkStart.exe</code>.</li></ul>
+<p><strong>② Saiba quanto tempo leva a inicialização</strong></p>
+<p>Uma inicialização a frio de cerca de 23~48 segundos e um reinício por troca de orientação de cerca de 50 segundos são normais. Nesse tempo o ícone parece "não fazer nada", mas o runtime está iniciando em segundo plano. <strong>Não clique várias vezes</strong>: cliques repetidos fazem uma segunda instância assumir o emulador, e a limpeza ao encerrar a primeira instância pode fechar o emulador também, causando falha (a 0.6.3 adicionou a proteção <code>owner.pid</code>, mas a espera na fila ainda pode parecer que nada está acontecendo). Clique uma vez e espere abrir.</p>
+<p><strong>③ A janela nativa não assumiu → volta para a janela incorporada com botão de girar</strong></p>
+<p>Se o log mostrar <code>attach failed</code> ou <code>emu:0</code>, o proxy de janela não achou a janela do emulador e o programa voltou ao modo incorporado (a janela de shell com barra de título e botão de girar que você vê).</p>
+<ul><li>Isso é fácil de acontecer ao iniciar por uma junção de diretório ou por um caminho fora do padrão; a 0.6.3 faz o proxy resolver o caminho real antes de comparar. Se ainda acontecer, envie o log com o seu feedback.</li></ul>
+<p><strong>④ Redefinir os dados do Android (último recurso)</strong></p>
+<p>Configurações → Básico e instalação → <strong>Redefinir dados do Android</strong> (pede confirmação). Isso remove os apps instalados e os dados, mas mantém o sistema em si; a lista de apps é mantida e os apps são reinstalados automaticamente quando você os abre. Ajuda em vários casos de "não abre" causados por partição de dados corrompida ou por <code>/data</code> que não monta.</p>
+<hr/>
+<h3 id="6-6-其它启动类问题速查表">6.6 Outros problemas de inicialização: consulta rápida</h3>
+<p>O ApkStart West <strong>já trata automaticamente a maior parte</strong> destes erros de runtime. A tabela mostra o que ele fez e o que mais você pode fazer. Se o tratamento automático não funcionar, exporte um relatório de diagnóstico como em 5.3.</p>
+<div class="tw"><table><thead><tr><th>Título do diagnóstico</th><th>Tratamento automático</th><th>O que mais você pode fazer</th></tr></thead><tbody><tr><td>Aceleração de hardware indisponível</td><td>Volta para a emulação por software</td><td>Ative a aceleração como em 6.1</td></tr><tr><td>Falha na alocação de memória</td><td>Reduz a memória e o número de núcleos</td><td>Feche programas que usam muita memória</td></tr><tr><td>Porta do emulador em uso</td><td>Troca para uma porta livre automaticamente</td><td>Feche outros emuladores (como o BlueStacks) ou reinicie</td></tr><tr><td>Arquivo de trava restante / "Running multiple emulators with the same AVD"</td><td>Limpa a trava do AVD e tenta de novo</td><td>Confirme que nenhum outro emulador está usando o mesmo runtime</td></tr><tr><td>Imagem do sistema ausente / corrompida / incompatível com dados antigos</td><td>Inicia de novo com dados de usuário limpos</td><td>Configurações → Básico e instalação: apague a imagem e baixe de novo</td></tr><tr><td>Snapshot de inicialização rápida corrompido</td><td>Descarta o snapshot antigo e faz inicialização a frio</td><td>Ele é recriado na próxima saída normal; ou desative os snapshots</td></tr><tr><td>Componente do runtime apagado / falta o runtime do VC++</td><td>—</td><td>Adicione o ApkStart West à lista de permissões do antivírus e descompacte de novo; instale o runtime Microsoft VC++ 2015-2022</td></tr><tr><td>Espaço em disco insuficiente</td><td>—</td><td>Mova a pasta do runtime para uma unidade com mais espaço; desative os snapshots / reduza a partição de dados</td></tr><tr><td>O caminho tem caracteres especiais ou fora do padrão ASCII</td><td>Troca para um caminho curto automaticamente</td><td>Mova o ApkStart West para uma pasta simples (como <code>C:\ApkStart</code>)</td></tr><tr><td>A CPU não tem um conjunto de instruções (AVX/SSE4)</td><td>—</td><td>Quase sempre é só um aviso e ainda inicia; senão, use um PC com suporte a VT-x/AVX ou um motor mais antigo</td></tr><tr><td>O runtime atual não aceita este modo de GPU</td><td>Escolhe um modo de GPU disponível para a versão do motor</td><td>—</td></tr><tr><td>Placa de vídeo / erro desconhecido</td><td>Tenta de novo automaticamente com vários conjuntos de parâmetros</td><td>Atualize o driver da placa de vídeo; ou grave uma correção de compatibilidade; se ainda falhar, exporte um relatório de diagnóstico</td></tr></tbody></table></div>
+<p><strong>O ícone da área de trabalho aparece como o ícone do ApkStart West / em branco</strong>: Configurações → Integração e arquivos → <strong>Recriar atalhos</strong> (regrava os atalhos da área de trabalho e do menu Iniciar a partir da lista atual de apps, consertando também os ícones e a identidade na barra de tarefas). Recrie também quando um atalho foi movido e o caminho não vale mais.</p>
+<hr/>
+<h3 id="6-7-应用没有声音-声音很小">6.7 App sem som / som muito baixo</h3>
+<p><strong>Sintoma</strong>: os vídeos e os sons de aviso de um app Android ficam totalmente mudos; ou outros programas do Windows têm som e só os apps dentro do ApkStart West não têm.</p>
+<p><strong>Primeiro, separe os casos</strong>: se o próprio sistema também está sem som, resolva primeiro o áudio do Windows. Só siga os passos abaixo se apenas os apps dentro do ApkStart West estiverem mudos.</p>
+<ol><li><strong>Volume do Windows e dispositivo de saída</strong>: clique no ícone de volume da barra de tarefas e confirme que não está no mudo, que o volume não é 0 e que o dispositivo de saída é o fone / a caixa de som que você está usando. Abra o "Mixer de volume" e veja se a linha do ApkStart West / runtime do Android está no mudo por conta própria ou em 0.</li><li><strong>Volume dentro do app</strong>: alguns apps colocam o volume de mídia em 0 na primeira vez que abrem. Aumente nas configurações do próprio app ou com as teclas de volume do Android. Alguns apps de vídeo também podem ter desativado o som da reprodução automática dentro do app.</li><li><strong>A chave de som do ApkStart West</strong>: Configurações → Desempenho e recursos → <strong>Som do Android</strong> precisa estar marcada. A verificação automática confere este item; se estiver desativado, ele aparece em "Configurações → Diagnóstico e reparo", e um clique em "Corrigir" o ativa. <strong>Depois de mudar, é preciso reiniciar o runtime do Android uma vez</strong> (só quando o som e o microfone estão desativados ele inicia com <code>-no-audio</code>, e uma mudança feita durante a execução não produz som na hora).</li><li><strong>Serviço de áudio do Windows</strong>: pressione <code>Win+R</code>, digite <code>services.msc</code>, encontre <strong>Áudio do Windows</strong> e confirme que o status é "Em execução" e o tipo de inicialização é "Automático". Se estiver desativado, clique com o botão direito e inicie. As verificações automáticas da 0.6.3 também detectam isso e avisam. Em um PowerShell como administrador você pode executar <code>net start Audiosrv</code>.</li><li><strong>Fone Bluetooth / várias saídas de áudio</strong>: depois de trocar para um fone Bluetooth, o Windows às vezes não move os programas que já estão em execução. Desconecte e reconecte o fone, ou reinicie o runtime do Android uma vez.</li><li><strong>Ainda sem som</strong>: use "Configurações → Diagnóstico e reparo → Exportar relatório de diagnóstico" e envie com o seu feedback. O relatório inclui a chave de som e o estado do serviço de áudio, então mostra se a causa é a configuração, um serviço do sistema ou o próprio app.</li></ol>
+<blockquote>Quando a correção automática falha, o programa abre esta seção sozinho. Se você desativou as notificações da verificação automática, também pode chegar aqui pelo botão "Tutorial" de um item da verificação automática ou pelo <code>?</code> da barra de título.</blockquote>
+<hr/>
+<h3 id="6-8-商店版启动失败-0xc0000135-dll-加载失败">6.8 Falha ao iniciar: 0xC0000135 (falha ao carregar DLL)</h3>
+<p><strong>Sintoma</strong>: depois de abrir um app, ele fica girando para sempre ou fecha logo, e o relatório de diagnóstico mostra o código de saída <code>0xC0000135</code> (decimal <code>3221225781</code>).</p>
+<p><strong>Primeiro, corrija um palpite errado comum</strong>: o <code>0xC0000135</code> só significa que "uma DLL não foi carregada". Ele <strong>não</strong> significa sempre falta do runtime do VC++ e nem sempre que o antivírus apagou um arquivo. Há duas causas comuns por trás do mesmo código de saída, então não fique reinstalando só pela primeira:</p>
+<ol><li><strong>Falta mesmo um runtime do VC++</strong>: o runtime do Android (Qt6 / qemu) depende do Microsoft VC++ 2015-2022 (x64). Se Configurações → Diagnóstico e reparo informar claramente "Falta o runtime do VC++ (x64)", é um <strong>arquivo dll ausente comprovado</strong>, e você pode clicar em "Corrigir" para instalar com um clique.</li><li><strong>O antivírus colocou arquivos do runtime em quarentena</strong>: se arquivos dll da pasta do runtime foram colocados em quarentena / apagados, esse código também aparece. Adicione a pasta de instalação do ApkStart West e a pasta de dados do runtime à lista de permissões do antivírus e instale de novo.</li></ol>
+<p><strong>Verifique nesta ordem</strong>:</p>
+<ol><li><strong>Veja se o diagnóstico realmente informa a falta do VC++</strong>: se as Configurações mostrarem "Falta o runtime do VC++ (x64)", clique na correção com um clique e reinicie o PC antes de tentar de novo. <strong>Não</strong> reinstale só porque o código de saída é <code>0xC0000135</code>; antes confirme que este item foi mesmo informado.</li><li><strong>O VC++ não é informado, mas ainda falha</strong>: feche o ApkStart West por completo (ícone da bandeja → Sair) e abra de novo; confira o "Acesso controlado a pastas / proteção contra ransomware" do seu antivírus, permita o ApkStart West e reinicie; se ainda falhar, execute-o a partir de uma pasta simples (como <code>C:\ApkStart</code>).</li><li><strong>Descobrir o nome exato da DLL que falha</strong> (avançado): ao relatar o problema, o mais valioso é dizer aos desenvolvedores qual dll está faltando. No Visualizador de Eventos → Logs do Windows → Aplicativo, procure o <code>Application Error</code> do ApkStart / emulator e leia o campo <code>FaultingModuleName</code>; ou use "Configurações → Diagnóstico e reparo → Exportar relatório de diagnóstico" e envie o relatório com o seu feedback.</li><li><strong>Se o adb também falhar</strong>: se o log de eventos mostrar também o <code>adb.exe</code> com <code>0xC0000409</code>, é um problema separado (erro de conexão do dispositivo) e não a causa direta de o emulador ter encerrado. Resolva primeiro a inicialização com os passos 1–3 acima e mencione o problema do adb separadamente no seu feedback.</li></ol>
+<blockquote>Esta seção abre sozinha: quando uma falha ao iniciar / falha de correção é considerada um problema de DLL, o programa abre direto aqui. Você também pode abri-la a qualquer momento pelo botão "Tutorial" de um item da verificação automática ou pelo <code>?</code> da barra de título.</blockquote>
+<hr/>
+<h3 id="6-9-应用用不到麦克风-无法语音通话录音">6.9 O app não consegue usar o microfone / não grava voz</h3>
+<p><strong>Sintoma</strong>: mensagens de voz, chamadas, gravação ou escaneamento por voz em um app não funcionam, com uma mensagem como "sem microfone / dispositivo de gravação indisponível".</p>
+<ol><li><strong>A chave de microfone do ApkStart West</strong>: Configurações → Desempenho e recursos → <strong>Entrada de microfone</strong> precisa estar marcada. Ela vem ativada por padrão; se foi desativada, a verificação automática informa "A entrada de microfone está desativada nas Configurações" em "Configurações → Diagnóstico e reparo", e um clique em "Corrigir" a ativa e reinicia o runtime. <strong>Depois de mudar, é preciso reiniciar o runtime do Android uma vez</strong> (a chave decide se o emulador expõe um dispositivo de gravação ao Android).</li><li><strong>Permissão de microfone do Windows</strong>: <code>Configurações → Privacidade e segurança → Microfone</code>, confirme que "Permitir que aplicativos acessem seu microfone" e "Permitir que aplicativos da área de trabalho acessem seu microfone" estão ativados. O Android roda dentro de um aplicativo de área de trabalho, e se isso estiver desativado o sistema não consegue entregar o microfone a ele.</li><li><strong>Confirme que o Windows consegue gravar</strong>: grave um trecho com o "Gravador de Voz" do sistema e confirme que o microfone e o dispositivo de entrada (microfone do fone / da webcam / microfone avulso) funcionam e não estão no mudo.</li><li><strong>Escolha o dispositivo de entrada certo</strong>: se houver vários microfones conectados, defina o que você quer como padrão em "Configurações de som → Entrada" do Windows. O emulador usa o dispositivo de entrada padrão do sistema.</li><li><strong>Relação entre som e microfone</strong>: o emulador só desliga por completo o subsistema de áudio para economizar CPU quando <strong>os dois</strong>, "Som do Android" e "Entrada de microfone", estão desativados; enquanto um estiver ativado, o outro funciona normalmente.</li></ol>
+<blockquote>Com o microfone desativado, o app apenas não encontra um dispositivo de gravação e não mostra nenhum erro evidente. A verificação automática avisa você proativamente; você também pode abrir esta seção manualmente pelo <code>?</code> da barra de título.</blockquote>
+<hr/>
+<h3 id="6-10-独显-核显渲染-显卡偏好">6.10 Placa de vídeo dedicada / integrada (preferência gráfica)</h3>
+<p><strong>Sintoma</strong>: o PC tem uma placa de vídeo dedicada, mas a imagem do app trava ou perde quadros; ou um notebook esquenta e gasta muita bateria e você quer usar a GPU integrada para economizar energia.</p>
+<p>A imagem Android do ApkStart West usa a renderização por hardware <code>-gpu host</code>, que usa de verdade a sua placa de vídeo. Desde a 0.6.4, todas as placas de vídeo (NVIDIA / AMD / Intel) preferem o host por padrão, e AMD/Intel não são mais jogadas para a renderização por software como nas versões antigas, o que era abrir mão da placa de vídeo de propósito. Se o host falhar neste PC, ele volta automaticamente para um backend por software e você pode continuar usando o app.</p>
+<p><strong>Escolher qual placa de vídeo usar</strong>: quando o PC tem uma GPU dedicada e uma integrada, o Windows às vezes atribui o emulador à integrada. Configurações → Desempenho e recursos → <strong>Preferência de placa de vídeo</strong> permite escolher explicitamente:</p>
+<div class="tw"><table><thead><tr><th>Opção</th><th>Indicada para</th></tr></thead><tbody><tr><td>Padrão do sistema (recomendado)</td><td>Deixar o Windows escolher por energia / carga, a opção mais simples na maioria dos PCs</td></tr><tr><td>Preferir GPU dedicada</td><td>Jogos, vídeo e tudo que precisa de taxa de quadros alta; gasta mais energia e esquenta mais</td></tr><tr><td>Preferir GPU integrada</td><td>Apps leves, deixar ligado sem uso, economizar energia no notebook; um pouco mais lenta</td></tr></tbody></table></div>
+<ul><li>Isso funciona por meio da "Preferência de desempenho gráfico" do Windows (UserGpuPreferences) para o processo do emulador e <strong>só vale no Windows 10 1803 ou mais recente</strong>; sistemas mais antigos ignoram automaticamente e a inicialização não é afetada.</li><li>Passa a valer <strong>na próxima vez que o runtime do Android iniciar</strong>; a página de configurações mostra se já está em vigor.</li><li>Em drivers AMD antigos o host às vezes falha: atualize o driver da placa de vídeo; se não bastar, em "Configurações → Diagnóstico e reparo → Drivers · correções de compatibilidade" ative a correção de exemplo swangle para GPU integrada AMD que acompanha o programa, que fixa a renderização em um backend mais estável.</li></ul>
+<hr/>
+<h2 id="7-命令行参考">7. Referência da linha de comando</h2>
+<pre><code>ApkStart.exe                          abre a janela principal
+ApkStart.exe &lt;caminho\do.apk&gt;         instala um APK
+ApkStart.exe --launch &lt;nome do pacote&gt; inicia um app direto (é o que os atalhos da área de trabalho usam)</code></pre>
+<hr/>
+<h2 id="8-数据与目录说明">8. Dados e pastas</h2>
+<div class="tw"><table><thead><tr><th>Finalidade</th><th>Local</th></tr></thead><tbody><tr><td>Runtime (adb / emulator / imagem)</td><td>Incluído no pacote, ou <code>%APPDATA%\apkstart-west\runtime</code> (versão leve)</td></tr><tr><td>Imagem do sistema descompactada</td><td><code>%APPDATA%\apkstart-west\system-images</code></td></tr><tr><td>AVD / apps instalados / snapshots</td><td><code>%APPDATA%\apkstart-west\avd</code></td></tr><tr><td>Ícones dos apps</td><td><code>%APPDATA%\apkstart-west\icons\&lt;nome do pacote&gt;.ico</code></td></tr><tr><td>Configurações e lista de apps</td><td><code>%APPDATA%\apkstart-west\settings.json</code> / <code>apps.json</code></td></tr><tr><td>Logs / relatórios de diagnóstico</td><td><code>%APPDATA%\apkstart-west\logs\</code></td></tr><tr><td>Pasta compartilhada Windows ↔ Android</td><td><code>%USERPROFILE%\ApkStartShared</code> ↔ <code>/sdcard/ApkStartShared</code></td></tr></tbody></table></div>
+<blockquote>"Redefinir dados do Android" só limpa a camada de dados do usuário; a imagem do sistema e os arquivos APK são mantidos, e atualizar o programa não apaga o runtime, os apps instalados nem os snapshots.  Mantenha bastante espaço livre no disco C: imagem descompactada + partição de dados + snapshots podem somar vários GB. Pouco espaço causa falhas na instalação e na inicialização.</blockquote>
+<hr/>
+<h2 id="9-获取帮助与反馈">9. Ajuda e feedback</h2>
+<p>Ao relatar um problema, anexe estas três coisas. Elas aceleram muito a descoberta da causa:</p>
+<ol><li><strong>Relatório de diagnóstico</strong>: Configurações → Diagnóstico e reparo → Exportar relatório de diagnóstico;</li><li><strong>As últimas 20 linhas do app.log</strong>: <code>%APPDATA%\apkstart-west\logs\app.log</code>;</li><li><strong>Sua versão e edição</strong>: por exemplo, "versão com instalador 0.6.4" ou "versão portátil completa 0.6.4".</li></ol>
+<ul><li>GitHub: &lt;https://github.com/mvoloch/apkstart-west&gt; (Issues / Releases)</li></ul>
+<hr/>
+<p>*Este manual corresponde à v0.6.4 e é atualizado a cada versão. Se o texto na tela for um pouco diferente do que está escrito aqui, vale o que o programa mostra de fato.*</p>
+</main>
+</div>
+<div class="btnbar"><button onclick="window.print()">Imprimir / salvar como PDF</button></div>
+<script>
+(function () {
+  var input = document.getElementById('tocSearch');
+  var links = Array.prototype.slice.call(document.querySelectorAll('#tocList a'));
+  if (!input) return;
+  input.addEventListener('input', function () {
+    var q = input.value.trim().toLowerCase();
+    links.forEach(function (a) { a.hidden = !!q && a.textContent.toLowerCase().indexOf(q) < 0; });
+  });
+  // When a tutorial opens at an anchor, scroll the matching section into view
+  if (location.hash) {
+    var hit = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if (hit) setTimeout(function () { hit.scrollIntoView({ block: 'start' }); }, 80);
+  }
+}());
+</script>
+</body>
+</html>
