@@ -10,6 +10,7 @@ const path = require('path');
 const crypto = require('crypto');
 const store = require('./store');
 const { autoRotateSetting } = require('./orientation');
+const { tr } = require('./i18n');
 
 /**
  * 镜像内「自动旋转」开关要写进 guest 的值（'1' 开 / '0' 关）。
@@ -56,34 +57,32 @@ function friendlyInstallError(raw) {
   const tag = code ? code[0] : '';
   const table = {
     INSTALL_FAILED_NO_MATCHING_ABIS:
-      '安装失败：这个应用只提供 ARM 原生库（多数国产应用如此），'
-      + '当前系统镜像没有 ARM 转译层。ApkStart 会自动切换到内置新版翻译层的兼容镜像并重试。',
+      'Install failed: this app only ships ARM native libraries, and the current system image has no ARM translation layer. ApkStart West will automatically switch to a compatibility image with a newer built-in translation layer and try again.',
     INSTALL_FAILED_OLDER_SDK:
-      '安装失败：应用要求的 Android 版本高于当前运行时（需更高系统镜像）。',
+      'Install failed: the app needs a newer Android version than the current runtime (a newer system image is required).',
     INSTALL_PARSE_FAILED_NO_CERTIFICATES:
-      '安装失败：APK 没有有效签名，无法安装。',
+      'Install failed: the APK has no valid signature, so it cannot be installed.',
     INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES:
-      '安装失败：与已安装版本签名不一致，请先卸载旧版再装。',
+      'Install failed: the signature does not match the installed version. Uninstall the old version first, then install again.',
     INSTALL_FAILED_VERSION_DOWNGRADE:
-      '安装失败：设备上已安装更高版本，不能降级覆盖。',
+      'Install failed: a newer version is already installed, and it cannot be downgraded over.',
     INSTALL_FAILED_INSUFFICIENT_STORAGE:
-      '安装失败：运行时磁盘空间不足，请清理后重试。',
+      'Install failed: the runtime does not have enough disk space. Free up some space and try again.',
     INSTALL_FAILED_INVALID_APK:
-      '安装失败：APK 文件损坏或不完整（可能下载未完成），请重新获取。',
-    INSTALL_FAILED_INVALID_URI: '安装失败：APK 路径含特殊字符，请把文件移到纯英文路径后重试。',
-    INSTALL_FAILED_ALREADY_EXISTS: '安装失败：已存在同名应用且签名不同，请先卸载。',
-    INSTALL_FAILED_UPDATE_INCOMPATIBLE: '安装失败：与已安装版本签名不一致，请先卸载旧版。',
+      'Install failed: the APK file is corrupt or incomplete (the download may not have finished). Get it again.',
+    INSTALL_FAILED_INVALID_URI: 'Install failed: the APK path has special characters. Move the file to a plain-English path and try again.',
+    INSTALL_FAILED_ALREADY_EXISTS: 'Install failed: an app with the same name but a different signature already exists. Uninstall it first.',
+    INSTALL_FAILED_UPDATE_INCOMPATIBLE: 'Install failed: the signature does not match the installed version. Uninstall the old version first.',
     INSTALL_FAILED_DEPRECATED_SDK_VERSION:
-      '安装失败：这是面向很老 Android 版本的应用（targetSdk 过低），Android 14 默认禁止安装。'
-      + 'ApkStart 会自动用官方绕过参数重试。',
-    INSTALL_FAILED_TEST_ONLY: '安装失败：这是仅供测试的应用包，已自动加上测试包参数重试。',
-    INSTALL_FAILED_MISSING_SHARED_LIBRARY: '安装失败：应用依赖的设备特性（如特定厂商库）在当前运行时不存在。',
-    INSTALL_FAILED_USER_RESTRICTION: '安装失败：系统限制了安装，请重启运行时后重试。',
-    INSTALL_FAILED_CONFLICTING_PROVIDER: '安装失败：与已有应用的 ContentProvider 冲突，请卸载冲突应用。',
-    INSTALL_FAILED_INTERNAL_ERROR: '安装失败：系统内部错误（常见于存储空间不足或开机未完成），请重启运行时后重试。',
+      'Install failed: this app targets a very old Android version (targetSdk too low), which Android 14 blocks by default. ApkStart West will automatically retry with the official bypass option.',
+    INSTALL_FAILED_TEST_ONLY: 'Install failed: this is a test-only package, so the test-package option was added automatically and it is being retried.',
+    INSTALL_FAILED_MISSING_SHARED_LIBRARY: 'Install failed: a device feature the app depends on (such as a specific vendor library) does not exist in the current runtime.',
+    INSTALL_FAILED_USER_RESTRICTION: 'Install failed: the system restricted the install. Restart the runtime and try again.',
+    INSTALL_FAILED_CONFLICTING_PROVIDER: 'Install failed: it conflicts with the ContentProvider of an existing app. Uninstall the conflicting app.',
+    INSTALL_FAILED_INTERNAL_ERROR: 'Install failed: internal system error (often caused by low storage or a boot that has not finished). Restart the runtime and try again.',
   };
   const msg = table[tag];
-  return msg ? `${msg}（${tag}）` : `安装失败：${raw}`;
+  return msg ? `${tr(msg)} (${tag})` : tr('Install failed: {reason}', { reason: raw });
 }
 
 /**
@@ -92,32 +91,29 @@ function friendlyInstallError(raw) {
  * 不是 ApkStart 的故障，也不要谎称「切换镜像就能解决」——0.6.3 只有一份带
  * 翻译层的通用镜像，没有第二套可切。必须在文案里如实说清并指向手册 6.3。
  */
-const ANTI_EMULATOR_RE = /anti[-_ ]?emulat|emulator.?detect|检测到.{0,6}(模拟|虚拟|调试)|反模拟|反仿真|反调试|anti[-_ ]?debug|safetynet|play.?integrity|cts.?profile|hook.?detect/i;
+const ANTI_EMULATOR_RE = /anti[-_ ]?emulat|emulator.?detect|检测到.{0,6}(模拟|虚拟|调试)|反模拟|反仿真|反调试|anti[-_ ]?debug|safetynet|play.?integrity|cts.?profile|hook.?detect/i; // i18n-keep: matches Chinese text printed by apps
 
 /** 把启动后的崩溃日志翻译成能看懂的原因 */
 function friendlyLaunchError(raw, pkg) {
   const t = String(raw || '');
   if (ANTI_EMULATOR_RE.test(t)) {
-    return `${pkg || '应用'} 检测到模拟器 / 转译环境后主动退出（反模拟、反调试或安全校验），`
-      + '属于应用自身限制，不是故障；ApkStart 无法绕过，详见内置手册 6.3。';
+    return tr('{app} detected the emulator or translation environment and quit on purpose (anti-emulator, anti-debug or integrity checks). This is a limit of the app itself, not a fault; ApkStart West cannot bypass it. See section 6.3 of the built-in manual.', { app: pkg || tr('The app') });
   }
   if (/DoBadTrampoline|libndk_translation|houdini|SIGABRT.*arm/i.test(t)) {
-    return `${pkg || '应用'} 启动后崩溃：应用与 ARM 翻译层不兼容`
-      + '（常见于反调试 / 反模拟检测或 native hook 冲突）。'
-      + '若运行时尚未启用兼容镜像会自动切换重试一次；已启用仍崩溃则属于应用兼容性限制，'
-      + '不是故障，详见内置手册 6.3。';
+    return tr('{app} crashed after starting: the app is not compatible with the ARM translation layer (common with anti-debug or anti-emulator checks, or native hook conflicts). If the compatibility image is not on yet, it is switched on and retried once; if it still crashes with the image on, this is an app compatibility limit, not a fault. See section 6.3 of the built-in manual.', { app: pkg || tr('The app') });
   }
   if (/UnsatisfiedLinkError|dlopen failed|couldn't find "lib|\.so.*not found/i.test(t)) {
-    return `${pkg || '应用'} 启动后崩溃：缺少设备原生库（应用可能只提供 ARM 版本）。`
-      + '若运行时尚未启用 ARM 翻译层会自动切换兼容镜像重试；已启用仍崩溃多为应用限制，详见内置手册 6.3。';
+    return tr('{app} crashed after starting: a native library is missing (the app may only ship an ARM version). If the ARM translation layer is not on yet, the compatibility image is switched on and retried; if it still crashes with it on, it is usually an app limit. See section 6.3 of the built-in manual.', { app: pkg || tr('The app') });
   }
   if (/ClassNotFoundException|NoClassDefFoundError|AndroidRuntime/i.test(t)) {
-    return `${pkg || '应用'} 启动即崩溃（应用内部异常，可能与模拟器环境或缺少 Google 服务有关）。`;
+    return tr('{app} crashed as soon as it started (an internal app error, possibly related to the emulator environment or missing Google services).', { app: pkg || tr('The app') });
   }
   if (/java\.lang\.SecurityException|Permission Denial/i.test(t)) {
-    return `${pkg || '应用'} 启动失败：系统拒绝了启动请求（权限或签名问题）。`;
+    return tr('{app} failed to start: the system refused the launch request (a permission or signature problem).', { app: pkg || tr('The app') });
   }
-  return `${pkg || '应用'} 未能启动${t ? `：${t.slice(0, 240)}` : '（进程未存活）'}`;
+  return t
+    ? tr('{app} could not start: {detail}', { app: pkg || tr('The app'), detail: t.slice(0, 240) })
+    : tr('{app} could not start (the process did not stay alive)', { app: pkg || tr('The app') });
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -296,7 +292,7 @@ class AdbClient {
           // adb install 的失败原因写在 stdout 且退出码非 0；
           // 旧版只看 stderr，导致用户永远只看到一句空泛的「失败」。
           const text = [stdout, stderr, err.message].filter(Boolean).join('\n').trim();
-          const e = new AdbError(`adb ${finalArgs.join(' ')} 失败: ${text}`, stderr, err.code);
+          const e = new AdbError(tr('adb {command} failed: {text}', { command: finalArgs.join(' '), text }), stderr, err.code);
           e.stdout = stdout;
           e.raw = text;
           return reject(e);
@@ -349,10 +345,10 @@ class AdbClient {
     });
     p.stderr.on('data', () => { /* 忽略：设备离线等信息由调用方兜底 */ });
     p.stdin.on('error', () => { /* 断开时由 exit 统一清理 */ });
-    p.on('error', () => { this._failWaiters(new Error('adb shell 启动失败')); });
+    p.on('error', () => { this._failWaiters(new Error(tr('The adb shell failed to start'))); });
     p.on('exit', () => {
       if (this._input === p) this._input = null;
-      this._failWaiters(new Error('adb shell 已退出'));
+      this._failWaiters(new Error(tr('The adb shell has exited')));
     });
     return p;
   }
@@ -368,7 +364,7 @@ class AdbClient {
   /** 执行一条白名单内的 input 命令；失败会回收会话，调用方可回退到一次性 adb */
   async input(cmd, { timeout = 4000 } = {}) {
     const { isInputCommand } = require('./pointer');
-    if (!isInputCommand(cmd)) throw new Error('非法的输入命令');
+    if (!isInputCommand(cmd)) throw new Error(tr('Invalid input command'));
     const p = this._inputSession();
     const id = ++this._inputSeq;
     const token = `__APKSTART_${id}__`;
@@ -376,7 +372,7 @@ class AdbClient {
       const timer = setTimeout(() => {
         this._waiters.delete(id);
         this.disposeInput();
-        reject(new Error('input 命令超时'));
+        reject(new Error(tr('The input command timed out')));
       }, timeout);
       this._waiters.set(id, { resolve, reject, timer, token });
       try {
@@ -394,7 +390,7 @@ class AdbClient {
     this._input = null;
     for (const [, w] of this._waiters) {
       clearTimeout(w.timer);
-      w.reject(new Error('输入通道已关闭'));
+      w.reject(new Error(tr('The input channel is closed')));
     }
     this._waiters.clear();
     if (p) {
@@ -466,7 +462,7 @@ class AdbClient {
    *  - NO_MATCHING_ABIS 抛带 code 的错误，交给上层自动切换兼容镜像。
    */
   async install(apkPath) {
-    if (!fs.existsSync(apkPath)) throw new Error(`APK 不存在: ${apkPath}`);
+    if (!fs.existsSync(apkPath)) throw new Error(tr('The APK does not exist: {path}', { path: apkPath }));
     const staged = stageApk(apkPath);
     const file = staged.path;
     const variants = [
@@ -517,7 +513,7 @@ class AdbClient {
           // 没拿到明确错误码：最后一种写法再试
         }
       }
-      const err = new Error(friendlyInstallError(last || '安装失败，未获得明确原因'));
+      const err = new Error(friendlyInstallError(last || tr('Install failed, and no clear reason was given')));
       err.code = (/INSTALL_[A-Z_]+/.exec(last) || [])[0] || 'INSTALL_UNKNOWN';
       err.raw = last;
       throw err;
@@ -528,7 +524,7 @@ class AdbClient {
 
   /** 拆分 APK（.apks / .xapk 解出来的多个分片）走 install-multiple */
   async installMultiple(apkPaths) {
-    if (!apkPaths || !apkPaths.length) throw new Error('没有可安装的分片 APK');
+    if (!apkPaths || !apkPaths.length) throw new Error(tr('There are no APK parts to install'));
     const staged = apkPaths.map((p) => stageApk(p));
     const files = staged.map((s) => s.path);
     const totalBytes = staged.reduce((n, s) => n + (fs.existsSync(s.path) ? fs.statSync(s.path).size : 0), 0);
@@ -551,7 +547,7 @@ class AdbClient {
           throw new Error(friendlyInstallError(raw));
         }
       }
-      throw new Error('拆分 APK 安装失败');
+      throw new Error(tr('Installing the split APK failed'));
     } finally {
       staged.forEach((s) => unstage(s.staged ? s.path : null));
     }
@@ -680,7 +676,7 @@ class AdbClient {
       // eslint-disable-next-line no-await-in-loop
       const alive = await this.waitAppAlive(pkg, 6000);
       if (alive.ok) return out;
-      if (alive.uncertain) return `${out}\n（应用仍在加载中）`;
+      if (alive.uncertain) return `${out}\n${tr('(the app is still loading)')}`;
       lastError = alive.crash || lastError;
       // 崩溃日志明确指向 ARM 翻译层时不再重试，直接交给上层切换兼容镜像
       if (/DoBadTrampoline|libndk_translation|UnsatisfiedLinkError|dlopen failed/i.test(alive.crash || '')) {
@@ -1113,7 +1109,7 @@ class AdbClient {
       let justInstalled = false;
       if (!installed) {
         if (!apkPath || !fs.existsSync(apkPath)) {
-          return { ok: false, reason: '输入法 APK 缺失' };
+          return { ok: false, reason: tr('The input method APK is missing') };
         }
         await this.install(apkPath);
         installed = true;
@@ -1127,7 +1123,7 @@ class AdbClient {
           await new Promise((r) => setTimeout(r, 800));
         }
       }
-      if (!installed) return { ok: false, justInstalled, reason: '输入法包未注册' };
+      if (!installed) return { ok: false, justInstalled, reason: tr('The input method package is not registered') };
       // 启用 + 设为默认（secure settings 可写，不需要 root）。
       // 每次都执行：从旧快照恢复时 enabled 标记可能丢失，或用户手动换过默认输入法。
       const cmds = [`ime enable ${IME_ID}`];

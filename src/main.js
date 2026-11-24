@@ -2863,7 +2863,7 @@ function registerIpc() {
     return keymapEngine.handleKey(key, pkg);
   });
   ipcMain.handle('keymap:getPresets', () => {
-    return Object.entries(KEYMAP_PRESETS).map(([id, p]) => ({ id, label: p.label, desc: p.desc }));
+    return Object.entries(KEYMAP_PRESETS).map(([id, p]) => ({ id, label: tr(p.label), desc: tr(p.desc) }));
   });
   ipcMain.handle('keymap:getMap', (_e, pkg) => keymapEngine ? keymapEngine.getMap(pkg) : []);
   ipcMain.handle('keymap:setMap', (_e, pkg, mappings) => {

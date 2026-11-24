@@ -13,6 +13,7 @@
  *      只按安装包大小放行，一定会装到一半失败。
  *   3. 任何自动值都必须能算得出来：拿不到宿主信息就退回保守默认，不能返回 NaN。
  */
+const { tr } = require('./i18n');
 
 const DEFAULT_STEP_MB = 512;
 const MIN_MEM_MB = 1024;
@@ -77,11 +78,11 @@ function clampMemoryMB(mb, totalMB) {
     return {
       mb: lim.maxMB,
       capped: true,
-      reason: `宿主内存 ${Math.round(lim.totalMB / 1024)} GB，最多只能分 ${Math.round(lim.maxMB / 1024)} GB（要留 25% 给 Windows）`,
+      reason: tr('This PC has {total} GB of memory, so at most {max} GB can be allocated (25% is kept for Windows)', { total: Math.round(lim.totalMB / 1024), max: Math.round(lim.maxMB / 1024) }),
     };
   }
-  if (rounded < lim.minMB) return { mb: lim.minMB, capped: true, reason: `安卓至少要 ${lim.minMB} MB 才能启动` };
-  return { mb: rounded, capped: rounded !== want, reason: rounded !== want ? '已按 512 MB 对齐' : '' };
+  if (rounded < lim.minMB) return { mb: lim.minMB, capped: true, reason: tr('Android needs at least {min} MB to start', { min: lim.minMB }) };
+  return { mb: rounded, capped: rounded !== want, reason: rounded !== want ? tr('Rounded to a multiple of 512 MB') : '' };
 }
 
 /**
@@ -94,7 +95,7 @@ function clampCores(n, hostCores) {
   const max = total > 1 ? total - 1 : 1;
   if (want <= 0) return { cores: 0, capped: false, reason: 'auto' };
   if (want > max) {
-    return { cores: max, capped: true, reason: `本机 ${total} 核，最多分 ${max} 核（留 1 核给 Windows）` };
+    return { cores: max, capped: true, reason: tr('This PC has {total} cores, so at most {max} can be allocated (1 core is kept for Windows)', { total, max }) };
   }
   return { cores: Math.max(1, want), capped: false, reason: '' };
 }
@@ -108,18 +109,18 @@ function memVerdict(allocMB, hostMB) {
   const host = toInt(hostMB);
   if (!alloc || !host) return { level: 'unknown', ratio: 0, note: '' };
   if (alloc < ABSOLUTE_MIN_MB) {
-    return { level: 'insufficient', ratio: alloc / host, note: `只分 ${alloc} MB，安卓可能起不来` };
+    return { level: 'insufficient', ratio: alloc / host, note: tr('Only {alloc} MB is allocated, so Android may not start', { alloc }) };
   }
   const ratio = alloc / host;
   if (ratio > 1 - HOST_RESERVE_RATIO) {
     return {
       level: 'insufficient',
       ratio,
-      note: `占了宿主 ${Math.round(ratio * 100)}% 内存，Windows 会开始换页，模拟器反而更卡`,
+      note: tr('This uses {percent}% of the PC memory, so Windows will start paging and the emulator will get slower', { percent: Math.round(ratio * 100) }),
     };
   }
   if (ratio > TIGHT_RATIO * (1 - HOST_RESERVE_RATIO)) {
-    return { level: 'tight', ratio, note: `已用 ${Math.round(ratio * 100)}% 宿主内存，建议同时关掉浏览器标签页` };
+    return { level: 'tight', ratio, note: tr('This uses {percent}% of the PC memory; consider closing browser tabs while you play', { percent: Math.round(ratio * 100) }) };
   }
   return { level: 'ok', ratio, note: '' };
 }
@@ -155,7 +156,7 @@ function clampDataGB(gb, freeMB) {
     return {
       gb: Math.max(0, lim.maxGB),
       capped: true,
-      reason: `所在磁盘只剩 ${(lim.freeMB / 1024).toFixed(1)} GB，最多能分 ${lim.maxGB} GB`,
+      reason: tr('The disk has only {free} GB free, so at most {max} GB can be allocated', { free: (lim.freeMB / 1024).toFixed(1), max: lim.maxGB }),
     };
   }
   return { gb: want, capped: false, reason: '' };
@@ -168,7 +169,7 @@ function clampDataGB(gb, freeMB) {
 function storageVerdict(freeMB, packageBytes) {
   const need = diskRequiredMB(packageBytes);
   const free = Math.max(0, toInt(freeMB));
-  if (!free) return { ok: true, needMB: need, freeMB: 0, shortMB: 0, note: '读不到磁盘剩余空间，跳过预检' };
+  if (!free) return { ok: true, needMB: need, freeMB: 0, shortMB: 0, note: tr('Could not read the free disk space, skipping the pre-check') };
   if (free >= need) return { ok: true, needMB: need, freeMB: free, shortMB: 0, note: '' };
   const short = need - free;
   return {
@@ -176,7 +177,7 @@ function storageVerdict(freeMB, packageBytes) {
     needMB: need,
     freeMB: free,
     shortMB: short,
-    note: `需要约 ${(need / 1024).toFixed(1)} GB，当前只剩 ${(free / 1024).toFixed(1)} GB，还差 ${(short / 1024).toFixed(1)} GB`,
+    note: tr('Needs about {need} GB, but only {free} GB is free ({short} GB short)', { need: (need / 1024).toFixed(1), free: (free / 1024).toFixed(1), short: (short / 1024).toFixed(1) }),
   };
 }
 
@@ -194,8 +195,7 @@ function diskVerdict(freeMB, requiredMB) {
     ok: false,
     freeMB: free,
     requiredMB: need,
-    message: `磁盘空间不足：还要约 ${Math.ceil(need / 1024)} GB，但 ApkStart 运行时所在磁盘只剩 ${(free / 1024).toFixed(1)} GB。`
-      + '请在设置里把运行时目录挪到空间更大的分区，或清理后重试。',
+    message: tr('Not enough disk space: about {need} GB more is needed, but the disk that holds the ApkStart West runtime has only {free} GB free. In Settings, move the runtime folder to a larger drive, or free up space and try again.', { need: Math.ceil(need / 1024), free: (free / 1024).toFixed(1) }),
   };
 }
 

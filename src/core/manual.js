@@ -30,7 +30,7 @@ const TOPICS = Object.freeze({
 });
 
 // 反模拟 / 安全校验导致的启动退出也归到 6.3：该章节末尾已说明这类应用属于限制。
-const ARM_RE = /NO_MATCHING_ABIS|DoBadTrampoline|libndk_translation|UnsatisfiedLinkError|arm64-v8a|armeabi-v7a|ARM translat|ARM 翻译层|ARM 转译层|反模拟|反仿真|反调试|anti[-_ ]?emulat|anti[-_ ]?debug|emulator.?detect|safetynet|play.?integrity/i; // i18n-keep
+const ARM_RE = /NO_MATCHING_ABIS|DoBadTrampoline|libndk_translation|UnsatisfiedLinkError|arm64-v8a|armeabi-v7a|ARM translat|tradução ARM|anti-emulador|anti-depura|ARM 翻译层|ARM 转译层|反模拟|反仿真|反调试|anti[-_ ]?emulat|anti[-_ ]?debug|emulator.?detect|safetynet|play.?integrity/i; // i18n-keep
 const ADB_RE = /ADB_UNAUTHORIZED|unauthori[sz]ed|not authori[sz]ed|allow USB debugging|USB debugging|debugging authori[sz]ation|允许 USB 调试|调试授权/i; // i18n-keep
 const SOUND_RE = /audio|AUDIO|sound|volume|muted|声音|音量|静音|Audiosrv/i; // i18n-keep
 // 0xC0000135 / DLL 加载失败： Decimal 3221225781 也要认，诊断里两种写法都出现
@@ -112,7 +112,7 @@ function topicForError(text) {
   if (SOUND_RE.test(s)) return shown(TOPICS.sound);
   if (DLL_RE.test(s)) return shown(TOPICS.dll);
   if (/INSTALL_|PARSE_FAILED|安装失败|签名|安装包/.test(s)) return shown(TOPICS.install); // i18n-keep
-  if (/install(ation)? failed|signature|install package/i.test(s)) return shown(TOPICS.install);
+  if (/install(ation)? failed|signature|install package|falha na instala|assinatura/i.test(s)) return shown(TOPICS.install);
   if (/attach failed|emu:0|device not found|旋转窗口/.test(s)) return shown(TOPICS.startup); // i18n-keep
   if (/rotate (button|window)|spinner window/i.test(s)) return shown(TOPICS.startup);
   return topicByText(s) === 'overview' ? shown(TOPICS.install) : shown(TOPICS[topicByText(s)]);

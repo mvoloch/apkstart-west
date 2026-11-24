@@ -4,6 +4,8 @@
  * 直接通过 adb 把常用的系统开关做成 ApkStart 设置页里的按钮。
  * 所有命令都是官方 shell 接口，不依赖 root。
  */
+const { tr } = require('./i18n');
+
 const ACTIONS = {
   settings: 'android.settings.SETTINGS',
   wifi: 'android.settings.WIFI_SETTINGS',
@@ -45,7 +47,7 @@ class AndroidSettings {
 
   async client() {
     const rt = await this.runtime.ensure();
-    if (!rt.ok) throw new Error(rt.error || '运行时未就绪');
+    if (!rt.ok) throw new Error(rt.error || tr('The runtime is not ready'));
     return rt.client;
   }
 

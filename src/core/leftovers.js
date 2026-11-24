@@ -16,6 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { execFileSync } = require('child_process');
+const { tr } = require('./i18n');
 
 const EXE = 'ApkStart.exe';
 
@@ -135,7 +136,7 @@ function scanDirs(installDir) {
       kind: 'dir',
       path: full,
       size: dirSize(full),
-      note: '旧版本程序目录（含 ' + EXE + '）',
+      note: tr('Old program folder (contains {exe})', { exe: EXE }),
     });
   };
   for (const root of candidateRoots(installDir)) {
@@ -194,7 +195,7 @@ function scanRegistry() {
         kind: 'registry',
         path: key,
         size: 0,
-        note: `失效的卸载项${disp ? `：${String(disp).trim()}` : ''}`,
+        note: disp ? tr('Stale uninstall entry: {name}', { name: String(disp).trim() }) : tr('Stale uninstall entry'),
       });
     }
   }
@@ -216,7 +217,7 @@ function scanTemp(dataDir) {
       const full = path.join(d, name);
       let size = 0;
       try { size = e.isDirectory() ? dirSize(full) : fs.statSync(full).size; } catch (_) { /* ignore */ }
-      out.push({ kind: 'temp', path: full, size, note: '更新下载的临时文件' });
+      out.push({ kind: 'temp', path: full, size, note: tr('Temporary files from update downloads') });
     }
   }
   return out;
@@ -238,7 +239,7 @@ function scanSnapshots(avdHome) {
       kind: 'dir',
       path: full,
       size: dirSize(full),
-      note: e.name.startsWith('default_boot') ? '旧版遗留的快速启动快照' : '废弃的快照残留',
+      note: e.name.startsWith('default_boot') ? tr('Quick-start snapshot left over from an older version') : tr('Abandoned snapshot leftovers'),
     });
   }
   return out;
@@ -271,20 +272,20 @@ function clean(items, { installDir }) {
     try {
       if (it.kind === 'dir') {
         // 双保险：绝不删当前正在运行的目录
-        if (norm(it.path) === cur) { failed.push({ path: it.path, reason: '这是当前正在运行的版本' }); continue; }
-        if (!fs.existsSync(path.join(it.path, EXE))) { failed.push({ path: it.path, reason: '目录里没有 ' + EXE }); continue; }
+        if (norm(it.path) === cur) { failed.push({ path: it.path, reason: tr('This is the version that is currently running') }); continue; }
+        if (!fs.existsSync(path.join(it.path, EXE))) { failed.push({ path: it.path, reason: tr('The folder does not contain {exe}', { exe: EXE }) }); continue; }
         if (rm(it.path)) { freed += it.size || 0; removed.push(it.path); }
-        else failed.push({ path: it.path, reason: '文件被占用（可能有窗口还开着）' });
+        else failed.push({ path: it.path, reason: tr('The files are in use (a window may still be open)') });
       } else if (it.kind === 'registry') {
         const r = execFileSync('reg', ['delete', it.path, '/f'], { windowsHide: true, timeout: 10000 });
         void r;
         removed.push(it.path);
       } else if (it.kind === 'temp') {
         if (rm(it.path)) { freed += it.size || 0; removed.push(it.path); }
-        else failed.push({ path: it.path, reason: '文件被占用' });
+        else failed.push({ path: it.path, reason: tr('The file is in use') });
       } else if (it.kind === 'shortcut') {
         if (rm(it.path)) removed.push(it.path);
-        else failed.push({ path: it.path, reason: '删除失败' });
+        else failed.push({ path: it.path, reason: tr('Could not delete') });
       }
     } catch (e) {
       failed.push({ path: it.path, reason: e.message });

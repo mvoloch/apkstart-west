@@ -508,13 +508,13 @@ async function markInstalled() {
 /** 把安装失败翻译成「下一步该做什么」，只对最常见的几种做提示，其它原样显示 */
 function friendlyInstallErrorText(msg) {
   const s = String(msg || tr('Unknown error'));
-  if (/INSUFFICIENT_STORAGE|not enough space|no space|disk space|空间不足|ENOSPC/i.test(s)) { // i18n-keep
+  if (/INSUFFICIENT_STORAGE|not enough space|no space|disk space|espaço em disco|空间不足|ENOSPC/i.test(s)) { // i18n-keep
     return `${s}\n${tr('The Android data partition is too small: go to Settings → Performance and resources → increase the Android data partition, then click "Expand now".')}`;
   }
   // 只有真正失败才走到这里：切换镜像是「进行中」的进度提示（install:progress），
   // 绝不能在红色失败横幅里再说「正在重试」——那会让用户以为还在处理，其实是真的失败了。
   if (/NO_MATCHING_ABIS/i.test(s)) {
-    return /已切换到.*仍然安装失败|switched to .*still failed|abiRetried/i.test(s) // i18n-keep
+    return /已切换到.*仍然安装失败|switched to .*still failed|mudou para .*ainda falhou|abiRetried/i.test(s) // i18n-keep
       ? `${s}\n${tr('The ARM compatibility image is already on and the install still fails. Go to Settings → Diagnostics and repair, export a diagnostic report and send it as feedback.')}`
       : `${s}\n${tr('This package only has ARM libraries. The app will switch to the compatibility image and reinstall once; watch for the next message.')}`;
   }

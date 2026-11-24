@@ -8,6 +8,8 @@
  * 足以覆盖 99% 的应用名与图标场景。
  */
 
+const { tr } = require('./i18n');
+
 const RES_TABLE_TYPE = 0x0002;
 const RES_STRING_POOL_TYPE = 0x0001;
 const RES_TABLE_PACKAGE_TYPE = 0x0200;
@@ -86,7 +88,7 @@ class ResTable {
 
   _parse() {
     const buf = this.buf;
-    if (buf.readUInt16LE(0) !== RES_TABLE_TYPE) throw new Error('resources.arsc 格式错误');
+    if (buf.readUInt16LE(0) !== RES_TABLE_TYPE) throw new Error(tr('resources.arsc has an invalid format'));
     const headerSize = buf.readUInt16LE(2);
     const total = buf.readUInt32LE(4);
     const pkgCount = buf.readUInt32LE(8);

@@ -16,6 +16,7 @@
  */
 const path = require('path');
 const { sha256File } = require('./download');
+const { tr } = require('./i18n');
 
 const APP_DIR = 'resources/app';
 const MANIFEST_RE = /-manifest\.json$/i;
@@ -29,12 +30,12 @@ function norm(p) {
 /** 清单格式校验。宁可判为「不可用」退回完整包，也不要拿一份残缺清单去覆盖文件。 */
 function parseManifest(text) {
   let m;
-  try { m = JSON.parse(text); } catch (_) { throw new Error('增量清单不是合法 JSON'); }
-  if (!m || m.schema !== 1) throw new Error('增量清单版本不支持');
-  if (!m.version || !m.electronVersion) throw new Error('增量清单缺少版本信息');
+  try { m = JSON.parse(text); } catch (_) { throw new Error(tr('The incremental manifest is not valid JSON')); }
+  if (!m || m.schema !== 1) throw new Error(tr('The incremental manifest version is not supported'));
+  if (!m.version || !m.electronVersion) throw new Error(tr('The incremental manifest has no version information'));
   if (!m.app || !m.app.asset || !m.app.sha256 || !m.app.files
       || typeof m.app.files !== 'object' || !Object.keys(m.app.files).length) {
-    throw new Error('增量清单缺少代码包信息');
+    throw new Error(tr('The incremental manifest has no code package information'));
   }
   return m;
 }
@@ -50,14 +51,14 @@ function isAuxAsset(name) {
  * 只看不依赖网络的条件：安装形态、Electron 版本、清单声明的代码包在不在资产里。
  */
 function chooseMode({ flavor, electronVersion, manifest, assets = [], current = '' }) {
-  if (flavor !== 'portable') return { mode: 'full', reason: '安装版走完整安装包' };
-  if (!manifest) return { mode: 'full', reason: '没有增量清单' };
+  if (flavor !== 'portable') return { mode: 'full', reason: 'The installer edition uses the full package' };
+  if (!manifest) return { mode: 'full', reason: 'No incremental manifest' };
   if (!electronVersion || String(manifest.electronVersion) !== String(electronVersion)) {
-    return { mode: 'full', reason: 'Electron 版本不同，需要完整包' };
+    return { mode: 'full', reason: 'Different Electron version, full package needed' };
   }
   const appAsset = assets.find((a) => a && a.name === manifest.app.asset);
-  if (!appAsset) return { mode: 'full', reason: '增量代码包未发布' };
-  return { mode: 'app', appAsset, reason: '代码层增量更新' };
+  if (!appAsset) return { mode: 'full', reason: 'Incremental code package not published' };
+  return { mode: 'app', appAsset, reason: 'Code-layer incremental update' };
 }
 
 /**

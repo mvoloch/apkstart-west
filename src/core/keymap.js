@@ -17,8 +17,8 @@
 
 const PRESETS = {
   fps: {
-    label: 'FPS / 射击类',
-    desc: 'WASD 控制左侧虚拟摇杆区域，J 射击，K 换弹，Space 跳跃',
+    label: 'FPS / shooter',
+    desc: 'WASD controls the virtual joystick area on the left, J shoots, K reloads, Space jumps',
     mappings: [
       { key: 'w', action: 'tap', x: 0.15, y: 0.75 },
       { key: 'a', action: 'tap', x: 0.08, y: 0.82 },
@@ -30,8 +30,8 @@ const PRESETS = {
     ],
   },
   rpg: {
-    label: 'RPG / 动作类',
-    desc: 'WASD 移动，J 攻击，K 技能，L 大招，Space 确认/对话',
+    label: 'RPG / action',
+    desc: 'WASD moves, J attacks, K uses a skill, L uses the ultimate, Space confirms or talks',
     mappings: [
       { key: 'w', action: 'tap', x: 0.15, y: 0.75 },
       { key: 'a', action: 'tap', x: 0.08, y: 0.82 },
@@ -44,8 +44,8 @@ const PRESETS = {
     ],
   },
   generic: {
-    label: '通用 / 休闲类',
-    desc: '方向键移动，Enter 确认，Space 取消/返回',
+    label: 'General / casual',
+    desc: 'Arrow keys move, Enter confirms, Space cancels or goes back',
     mappings: [
       { key: 'ArrowUp', action: 'tap', x: 0.15, y: 0.75 },
       { key: 'ArrowLeft', action: 'tap', x: 0.08, y: 0.82 },
