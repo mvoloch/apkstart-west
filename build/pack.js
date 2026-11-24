@@ -240,16 +240,16 @@ function embedExeMeta(exe) {
     // 四段式文件版本（和 MSIX 的口径一致），产品版本用三段式
     '--set-file-version', `${PKG.version}.0`,
     '--set-product-version', PKG.version,
-    '--set-version-string', 'ProductName', 'ApkStart',
-    '--set-version-string', 'FileDescription', 'ApkStart 安卓应用运行器',
-    '--set-version-string', 'CompanyName', PKG.author || 'RoutineMiku',
-    '--set-version-string', 'LegalCopyright', 'Copyright (c) 2026 ApkStart',
+    '--set-version-string', 'ProductName', 'ApkStart West',
+    '--set-version-string', 'FileDescription', 'ApkStart West - Android app runner',
+    '--set-version-string', 'CompanyName', 'ApkStart West contributors',
+    '--set-version-string', 'LegalCopyright', 'Copyright (c) 2026 ApkStart contributors and ApkStart West contributors (MIT)',
     '--set-version-string', 'OriginalFilename', 'ApkStart.exe',
     '--set-version-string', 'InternalName', 'ApkStart',
   ];
   try {
     execFileSync(rcedit, args, { stdio: 'pipe', windowsHide: true });
-    console.log(`  exe 图标/版本已写入（${PKG.version}，FileDescription=ApkStart 安卓应用运行器）`);
+    console.log(`  exe 图标/版本已写入（${PKG.version}，FileDescription=ApkStart West）`);
     return true;
   } catch (e) {
     console.warn(`  [!] rcedit 失败：${e.message}`);

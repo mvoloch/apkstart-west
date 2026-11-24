@@ -282,11 +282,16 @@ class Sources {
         const rel = await getJson(withToken(id, `${s.api}/releases/latest`), 9000);
         return { source: id, name: s.name, web: s.web, rel };
       } catch (e) {
-        // Gitee 没有正式 release、或 GitHub 被墙，都退回列表取第一条
+        // No "latest" release (none published yet, or only pre-releases): fall back to the list
         try {
           const list = await getJson(withToken(id, `${s.api}/releases?per_page=10`), 9000);
           const first = (Array.isArray(list) ? list : []).find((r) => r && !r.draft);
           if (first) return { source: id, name: s.name, web: s.web, rel: first };
+          // The API answered and the repository simply has no releases yet: that is
+          // "nothing to update to", not a network failure.
+          if (Array.isArray(list) && !list.some((r) => r && !r.draft)) {
+            return { source: id, name: s.name, web: s.web, empty: true };
+          }
         } catch (_) { /* 继续尝试不依赖 API 的兜底 */ }
         // API 被限流/被墙时的兜底：网页跳转拿 tag，资产名按约定拼
         try {
@@ -323,6 +328,24 @@ class Sources {
       }
     }
     const ok = all.filter((x) => x && x.rel);
+    if (!ok.length && all.some((x) => x && x.empty)) {
+      const src = all.find((x) => x && x.empty);
+      const none = {
+        none: true,
+        version: '',
+        tag: '',
+        name: '',
+        notes: '',
+        htmlUrl: `${src.web}/releases`,
+        publishedAt: '',
+        assets: [],
+        sources: [],
+        unreachable: all.filter((x) => x && x.error).map((x) => ({ source: x.source, name: x.name, error: x.error })),
+        bySource: src.source,
+      };
+      this._relCache = { at: Date.now(), key: pref, value: none };
+      return none;
+    }
     if (!ok.length) {
       const why = all.map((x) => `${x.name || x.source}: ${x.error || '无数据'}`).join('；');
       // 全挂了但手里有上一次的结果：宁可给一份「可能是旧的」版本信息，

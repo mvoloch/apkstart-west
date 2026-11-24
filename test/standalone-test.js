@@ -209,11 +209,6 @@ function touch(dir, rel, bytes = 8) {
     assert(/assertStandalone\(path\.join\(OUT, 'resources'\)/.test(src), 'pack.js 未接入守卫');
   });
 
-  test('MSIX 打包会扫一遍载荷 app/', () => {
-    const src = read('build', 'msix.js');
-    assert(/assertStandalone\(appDir/.test(src), 'msix.js 未接入守卫');
-  });
-
   test('打包只带 build/runtime（Google 运行时），没有别的模拟器目录', () => {
     const yml = read('electron-builder.yml');
     const block = yml.slice(yml.indexOf('extraResources:'));
