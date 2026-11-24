@@ -24,10 +24,16 @@
   }
 
   const ATTRS = ['placeholder', 'title', 'alt', 'aria-label'];
+  // Keys are whitespace-collapsed (HTML text often spans indented lines);
+  // the node keeps its leading/trailing space so inline layout stays the same.
   function swap(s) {
-    const k = String(s || '').trim();
+    const raw = String(s || '');
+    const k = raw.replace(/\s+/g, ' ').trim();
     const v = k && dict[k];
-    return typeof v === 'string' && v ? String(s).replace(k, v) : null;
+    if (!(typeof v === 'string' && v)) return null;
+    const lead = /^\s/.test(raw) ? ' ' : '';
+    const tail = /\s$/.test(raw) ? ' ' : '';
+    return lead + v + tail;
   }
 
   function translateDom(root) {
