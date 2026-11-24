@@ -1509,8 +1509,8 @@ async function launchOne(pkg) {
         if (!a || a.ok) return;
         accelWarned = true;
         notify(tr('Running in software emulation (very slow)'), store.STORE_BUILD
-          ? tr('Turn on "Windows Hypervisor Platform" and restart once to make it 5 to 10 times faster. Settings → Environment check → Repair opens that window for you.')
-          : tr('Settings → Environment check → Repair can turn it on in one click (needs administrator approval). Then restart once.'));
+          ? tr('Turn on "Windows Hypervisor Platform" and restart once to make it 5 to 10 times faster. Settings → Environment check → Fix opens that window for you.')
+          : tr('Settings → Environment check → Fix can turn it on in one click (needs administrator approval). Then restart once.'));
       }).catch(() => {});
     }
     // 兜底：如果 early attach 没触发（比如嵌入模式），这里补一次。幂等，已收则无事。
@@ -3211,8 +3211,8 @@ if (!gotLock) {
       if (freeMB && freeMB < 3072) {
         appLog(`LOW_DISK free=${freeMB}MB dir=${store.DATA_DIR}`);
         setTimeout(() => {
-          notify(tr('Low disk space'), tr('Only {size} GB left. Go to "Settings → System integration" and move the Android data folder or runtime folder to another drive, or free up some space.', { size: (freeMB / 1024).toFixed(1) }));
-          send('toast', { type: 'error', message: tr('Only {size} GB of disk space left, so Android may not start (Settings → System integration lets you change drives)', { size: (freeMB / 1024).toFixed(1) }) });
+          notify(tr('Low disk space'), tr('Only {size} GB left. Go to "Settings → Integration and files" and move the Android data folder or runtime folder to another drive, or free up some space.', { size: (freeMB / 1024).toFixed(1) }));
+          send('toast', { type: 'error', message: tr('Only {size} GB of disk space left, so Android may not start (Settings → Integration and files lets you change drives)', { size: (freeMB / 1024).toFixed(1) }) });
         }, 3000).unref?.();
       }
     }
