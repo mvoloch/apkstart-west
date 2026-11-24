@@ -22,14 +22,14 @@ ApkStart West is a fork of [ApkStart](https://github.com/RoutineMiku/apkstart) b
 
 | Upstream ApkStart | ApkStart West |
 |---|---|
-| Downloads and updates through Gitee (China) and GitHub proxies ghfast.top / gh-proxy.com | GitHub only; an optional mirror prefix is used only if you type one |
-| Android DNS forced to 223.5.5.5 / 119.29.29.29 (Alibaba / Tencent) | Android uses your PC's DNS |
-| Connectivity check pointed at Xiaomi (connect.rom.miui.com) | Android's default Google check (connectivitycheck.gstatic.com) |
-| Android in Chinese, time zone Asia/Shanghai, Pinyin keyboard on | Android in English, PC time zone, Chinese keyboard optional and off |
+| Downloads and updates through a code host in China and two third-party GitHub proxies | GitHub only; an optional mirror prefix is used only if you type one |
+| Android DNS forced to two public DNS servers in China | Android uses your PC's DNS |
+| Connectivity check pointed at a Chinese phone maker's server | Android's default Google check (connectivitycheck.gstatic.com) |
+| Android in Chinese, China time zone, Pinyin keyboard on | Android in English, PC time zone, Chinese keyboard optional and off |
 | Updater could replace the app with upstream releases | Updater only looks at `mvoloch/apkstart-west`; separate data folder (`%APPDATA%\apkstart-west`), install id and taskbar identity, so it never touches an upstream install |
 | WeChat / Douyin QR codes and links, Microsoft Store package of upstream | Removed |
 
-The full audit, with every host the code can reach and a traffic capture of a real run, is in [docs/NO-CHINA.md](docs/NO-CHINA.md). A test (`test/no-china-test.js`, the first step of `npm test`) fails if any of the removed hosts or DNS servers comes back.
+The full audit, naming every removed host and DNS server, with every host the code can reach and a traffic capture of a real run, is in [docs/NO-CHINA.md](docs/NO-CHINA.md). A test (`test/no-china-test.js`, the first step of `npm test`) fails if any of the removed hosts or DNS servers comes back.
 
 ## Requirements
 
@@ -85,7 +85,7 @@ O ApkStart West é um fork do [ApkStart](https://github.com/RoutineMiku/apkstart
 - **Pasta compartilhada** entre o PC (`%USERPROFILE%\ApkStartShared`) e o Android (`/sdcard/ApkStartShared`).
 - **Interface em inglês ou português** (Configurações → Básico e instalação → Idioma da interface). O Android começa em inglês (dá para mudar) e usa o fuso horário do PC.
 
-O que mudou em relação ao original: sai o Gitee e os proxies do GitHub (ghfast.top, gh-proxy.com); sai o DNS chinês forçado (223.5.5.5 e 119.29.29.29) e o Android passa a usar o DNS do seu PC; a verificação de conexão volta para a do Google, em vez da Xiaomi; o Android deixa de vir em chinês com fuso de Xangai; o atualizador só olha para `mvoloch/apkstart-west` e o app usa pasta de dados e identidade próprias, então nunca troca nem mexe numa instalação do ApkStart original. A auditoria completa, com a captura de tráfego de uma execução real, está em [docs/NO-CHINA.md](docs/NO-CHINA.md).
+O que mudou em relação ao original: saem o servidor de código na China e os dois proxies de terceiros do GitHub; sai o DNS chinês forçado e o Android passa a usar o DNS do seu PC; a verificação de conexão volta para a do Google, em vez da de um fabricante chinês; o Android deixa de vir em chinês com fuso da China; o atualizador só olha para `mvoloch/apkstart-west` e o app usa pasta de dados e identidade próprias, então nunca troca nem mexe numa instalação do ApkStart original. A auditoria completa, com a captura de tráfego de uma execução real, está em [docs/NO-CHINA.md](docs/NO-CHINA.md).
 
 **Requisitos:** Windows 10 ou 11 de 64 bits, virtualização ligada na BIOS, uns 6 GB livres. **Download:** [releases](https://github.com/mvoloch/apkstart-west/releases), ou compile a partir do código com os comandos acima. Na primeira execução o app baixa do Google (`dl.google.com`) o emulador (~460 MB), a imagem do sistema (~1,5 GB) e as ferramentas adb (~8 MB).
 
