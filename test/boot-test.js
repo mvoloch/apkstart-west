@@ -22,7 +22,7 @@ const store = require('../src/core/store');
 const { Runtime } = require('../src/core/engine');
 const { downloadParallel } = require('../src/core/download');
 
-const ISO_URL = 'https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.20/releases/x86_64/alpine-virt-3.20.3-x86_64.iso';
+const ISO_URL = 'https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-virt-3.20.3-x86_64.iso';
 const WORK = path.join(os.tmpdir(), 'apkstart-boot');
 const ISO = path.join(WORK, 'alpine-virt.iso');
 const DISK = path.join(WORK, 'boot-test.qcow2');

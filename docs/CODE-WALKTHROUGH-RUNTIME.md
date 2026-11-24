@@ -40,11 +40,10 @@ main.js ──> engine.js ──> provision.js ──> sources.js ──> versio
 | `Sources#candidates` | `(assetOrUrl: string\|{url}\|{urls:[]}) => string[]` | 源站优先、镜像其次，去重保序（371-393） |
 | `Sources#rank` | `(urls, {onProgress}) => Promise<string[]>` | 按 30 分钟内缓存的实测速度降序；≤1 个地址直接返回（399-432） |
 | `Sources#reset` | `() => void` | 清测速缓存 + 版本缓存 + 熔断（435-439） |
-| `SOURCES` | `{github:{id,name,api,web}, gitee:{...}}` | 常量，owner 写死在 22-24 |
+| `SOURCES` | `{github:{id,name,api,web}}` | 常量，owner 写死在 22-24 |
 | `measure` | `(url, {bytes=256*1024, timeoutMs=9000}) => Promise<{url,ok,got,ms,ttfb,speed,error?}>` | 真下 256KB 测吞吐（108-157） |
 | `withMirror` | `(url, prefix) => string` | 前缀补尾斜杠；非 `http(s)://` 返回 `''`（160-164） |
-| `mirrorList` | `(settings) => string[]` | 自定义前缀唯一生效 → 其次 `autoMirror!==false` 时的内置镜像（207-213） |
-| `KNOWN_MIRRORS` | `['https://ghfast.top/','https://gh-proxy.com/']` | 42-45 |
+| `mirrorList` | `(settings) => string[]` | Only the user-typed prefix; no built-in mirrors in ApkStart West |
 
 `latest()` 返回结构（350-361）：
 

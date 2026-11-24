@@ -1,6 +1,6 @@
 'use strict';
 /**
- * 在线更新：从 GitHub Releases（RoutineMiku/apkstart）取最新版本，下载并原地替换。
+ * 在线更新：从 GitHub Releases（mvoloch/apkstart-west）取最新版本，下载并原地替换。
  *
  * 三个形态都要照顾到：
  *   - 安装版（NSIS）：下载 `ApkStart-x.y.z-Setup.exe`，静默安装（/S）；
@@ -23,8 +23,8 @@ const { cmpVer } = require('./version');
 const { Sources } = require('./sources');
 const inc = require('./incremental');
 
-const OWNER = 'RoutineMiku';
-const REPO = 'apkstart';
+const OWNER = 'mvoloch';
+const REPO = 'apkstart-west';
 
 /** PowerShell 单引号字符串：内部的 ' 要写成 '' */
 function psq(s) {

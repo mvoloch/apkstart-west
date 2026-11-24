@@ -1052,9 +1052,10 @@ const { AdbClient, friendlyInstallError, friendlyLaunchError } = require('../src
     assert(!/-prop[\s\S]{0,80}persist\.sys\.locale/.test(emuCode),
       '不能再用无效的 -prop persist.sys.locale');
     assert(/_guestLocale/.test(emuJs), '要有可配置的语言来源');
-    // 默认中文
-    assert(/locale:\s*'zh-CN'/.test(storeJs), '默认语言必须是简体中文');
-    assert(/chineseIme:\s*true/.test(storeJs), '默认开启中文输入法');
+    // ApkStart West: English Android, Chinese keyboard optional and off
+    assert(/locale:\s*'en-US'/.test(storeJs), 'default Android language must be en-US');
+    assert(/chineseIme:\s*false/.test(storeJs), 'Chinese keyboard must be off by default');
+    assert(!/persist\.sys\.timezone/.test(adbJs), 'timezone must never be forced');
 
     // 输入法：随包带 APK、开机装好并启用
     assert(fs.existsSync(path.join(root, 'assets', 'PinyinIME.apk')), '缺少 PinyinIME.apk');
@@ -1065,9 +1066,10 @@ const { AdbClient, friendlyInstallError, friendlyLaunchError } = require('../src
     assert(/_chineseReady/.test(engJs), '中文初始化要幂等（每次开机只做一次）');
     assert(/chineseIme/.test(engJs), '要允许用户关掉');
 
-    // 联网验证端点：不能让 gstatic 把网络标成「!」
-    assert(/captive_portal_http_url/.test(adbJs), '要设置国内联网验证端点');
-    assert(/connect\.rom\.miui\.com/.test(adbJs), '端点要国内可达');
+    // Connectivity check: back to Android's default (Google); old values deleted
+    assert(/settings delete global captive_portal_http_url/.test(adbJs), 'must delete the overridden captive portal URL');
+    assert(/settings delete global captive_portal_http_url/.test(emuJs), 'repairWifi must delete it too');
+    assert(!/settings put global captive_portal/.test(adbJs + emuJs), 'must never set a captive portal endpoint');
 
     // 设置页要有开关
     assert(/setLocale/.test(html) && /setChineseIme/.test(html), '设置页要暴露语言/输入法开关');
@@ -1562,27 +1564,25 @@ const { AdbClient, friendlyInstallError, friendlyLaunchError } = require('../src
   await test('双源：候选地址含镜像前缀，自定义前缀优先于公共镜像', () => {
     const { Sources, withMirror } = require('../src/core/sources');
     const url = 'https://github.com/o/r/releases/download/v1/a.zip';
-    const auto = new Sources(() => ({ runtime: { autoMirror: true } }));
+    const auto = new Sources(() => ({ runtime: {} }));
     const list = auto.candidates(url);
     assert(list[0] === url, '源站必须排第一（测速排序前保持原序）');
-    assert(list.length >= 2 && list.some((u) => u.includes('ghfast.top')), '自动镜像应被列入候选');
+    assert(list.length === 1, `no built-in mirrors in ApkStart West, got ${JSON.stringify(list)}`);
 
-    const custom = new Sources(() => ({ runtime: { autoMirror: true, mirrorPrefix: 'https://my.mirror/' } }));
+    const custom = new Sources(() => ({ runtime: { mirrorPrefix: 'https://my.mirror/' } }));
     const c2 = custom.candidates(url);
     assert(c2.length === 2 && c2[1] === `https://my.mirror/${url}`, `自定义前缀应唯一生效，实际 ${JSON.stringify(c2)}`);
 
-    const off = new Sources(() => ({ runtime: { autoMirror: false } }));
-    assert(off.candidates(url).length === 1, '关掉自动镜像后只剩直连');
     assert(withMirror(url, 'https://x/') === `https://x/${url}`, '前缀缺尾斜杠要自动补');
 
-    // 镜像只代理 GitHub：Gitee 的地址拼上镜像前缀只会 403，不该被列入候选
-    const giteeUrl = 'https://gitee.com/daily-miku/apkstart/releases/download/v1/a.zip.part1';
-    assert(auto.candidates(giteeUrl).length === 1, 'Gitee 资产不应套 GitHub 镜像前缀');
+    // The prefix only wraps GitHub addresses
+    const otherUrl = 'https://example.com/o/r/releases/download/v1/a.zip.part1';
+    assert(custom.candidates(otherUrl).length === 1, 'non-GitHub assets must not get the prefix');
   });
 
   await test('双源：测速结果按速度排序，全部失败时保持原序不丢可用地址', async () => {
     const { Sources } = require('../src/core/sources');
-    const s = new Sources(() => ({ runtime: { autoMirror: false } }));
+    const s = new Sources(() => ({ runtime: {} }));
     // 直接注入测速缓存，避免测试依赖外网
     s._rankCache.set('https://slow/', { at: Date.now(), ok: true, speed: 1000 });
     s._rankCache.set('https://fast/', { at: Date.now(), ok: true, speed: 9000 });
@@ -1655,7 +1655,7 @@ const { AdbClient, friendlyInstallError, friendlyLaunchError } = require('../src
         name: 'ApkStart-v9.9.9-win64-portable.zip',
         size: 0,
         partial: true,
-        parts: [{ index: 1, size: 0, urls: ['https://gitee.com/x/p1'] }, { index: 2, size: 0, urls: ['https://gitee.com/x/p2'] }],
+        parts: [{ index: 1, size: 0, urls: ['https://example.com/x/p1'] }, { index: 2, size: 0, urls: ['https://example.com/x/p2'] }],
       }],
       sources: [{ source: 'gitee', name: 'Gitee', tag: 'v9.9.9' }],
       unreachable: [],
@@ -1694,9 +1694,9 @@ const { AdbClient, friendlyInstallError, friendlyLaunchError } = require('../src
 
   await test('双源：同名整包两边都有时，两个地址都要留着（否则 Gitee 永远轮不到）', async () => {
     const { Sources } = require('../src/core/sources');
-    const s = new Sources(() => ({ runtime: { autoMirror: false } }));
+    const s = new Sources(() => ({ runtime: {} }));
     const gh = 'https://github.com/o/r/releases/download/v0.3.3/a.zip';
-    const ge = 'https://gitee.com/o/r/releases/download/v0.3.3/a.zip';
+    const ge = 'https://example.com/o/r/releases/download/v0.3.3/a.zip';
     s.fetchReleases = async () => [
       { source: 'github', name: 'GitHub', web: 'g', rel: { tag_name: 'v0.3.3', assets: [{ name: 'ApkStart-v0.3.3-win64-portable.zip', size: 108200693, browser_download_url: gh }] } },
       // Gitee 的资产没有 size（实测），不能拿 GitHub 的大小冒充它
@@ -2024,7 +2024,7 @@ const { AdbClient, friendlyInstallError, friendlyLaunchError } = require('../src
       giteeCalls += 1;
       return [
         { source: 'github', name: 'GitHub', web: 'g', rel: { tag_name: 'v1.0.0', assets: [] } },
-        { source: 'gitee', name: 'Gitee', web: 'e', error: 'gitee.com 403 （被限流）' },
+        { source: 'gitee', name: 'Gitee', web: 'e', error: 'example.com 403 (rate-limited)' },
       ];
     };
     // 第一次：Gitee 报 403，被记入熔断
@@ -2621,11 +2621,11 @@ const { AdbClient, friendlyInstallError, friendlyLaunchError } = require('../src
     assert(/iconIcoPath: ico/.test(installerJs), 'writeShortcut 要拿到应用图标');
     assert(!/iconIcoPath:\s*(APPICON|appicon|brandIcon)/.test(installerJs), '不能用 ApkStart 的品牌图标');
     // 每个应用一个 AUMID：任务栏按应用分组，固定项才认得出是哪个应用
-    assert(/appUserModelId: `RoutineMiku\.ApkStart\.\$\{app\.package\}`/.test(installerJs),
+    assert(/appUserModelId: `ApkStartWest\.App\.\$\{app\.package\}`/.test(installerJs),
       '每个应用要有自己的 AUMID');
     // Windows 只在「进程 AUMID == 快捷方式 AUMID」时沿用快捷方式图标，
     // 所以打开某个应用时要把进程身份切过去，回管理窗口再切回 ApkStart。
-    assert(/const APP_AUMID = 'RoutineMiku\.ApkStart';/.test(mainJs), '要有统一的 AUMID 前缀');
+    assert(/const APP_AUMID = 'ApkStartWest\.App';/.test(mainJs), '要有统一的 AUMID 前缀');
     assert(/setAumid\(`\$\{APP_AUMID\}\.\$\{pkg\}`\)/.test(mainJs), '开应用窗口前要切到该应用的 AUMID');
     assert(/function showWindow\(\) \{\s*\n\s*\/\/[^\n]*\n\s*setAumid\(APP_AUMID\);/.test(mainJs),
       '回管理窗口要切回 ApkStart 的 AUMID');

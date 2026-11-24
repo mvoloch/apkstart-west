@@ -352,7 +352,7 @@ function displaySettings() { return store.getSettings().display || {}; }
  * Windows 任务栏 / 通知的身份。
  *
  * 为什么要按应用切换：每个安卓应用的桌面快捷方式都写了自己的 AUMID
- * （`RoutineMiku.ApkStart.<包名>`，见 installer.createShortcut），而且快捷方式的
+ * （`ApkStartWest.App.<包名>`，见 installer.createShortcut），而且快捷方式的
  * 图标是**那个应用自己的图标**。Windows 只有在「运行进程的 AUMID == 快捷方式的
  * AUMID」时，才会把正在运行的窗口和任务栏固定项合并成同一个按钮、并沿用快捷方式
  * 的图标。身份对不上就会出现「固定项是应用图标、任务栏上却另起一个 ApkStart 图标」。
@@ -361,7 +361,7 @@ function displaySettings() { return store.getSettings().display || {}; }
  * 一个进程跑多个应用的壳层就是这么做的）。这里只在开窗口之前切，且全程 try/catch ——
  * 万一某个 Windows 版本忽略它，也只是退化成按 exe 图标显示，不影响功能。
  */
-const APP_AUMID = 'RoutineMiku.ApkStart';
+const APP_AUMID = 'ApkStartWest.App';
 function setAumid(id) {
   try { app.setAppUserModelId(String(id || APP_AUMID).slice(0, 128)); } catch (_) { /* 非 Windows 或旧版本忽略 */ }
 }
@@ -983,7 +983,7 @@ function openManual(payload = {}) {
   } catch (e) {
     appLog(`manual open failed: ${e && e.message}`);
     // 手册打不开也不能影响修复流程：至少给个能点的在线地址
-    shell.openExternal('https://github.com/RoutineMiku/apkstart#readme').catch(() => {});
+    shell.openExternal('https://github.com/mvoloch/apkstart-west#readme').catch(() => {});
   }
   return target;
 }
@@ -1785,8 +1785,7 @@ function registerIpc() {
     // 换了更新源 / 镜像前缀 / 整包地址：之前那套「谁最快」的结论不再成立，清掉测速缓存；
     // 运行时整包 / 引擎 / 镜像的地址还缓存在 provisioner._cache 里，不清掉就要重启进程才生效。
     if (patch && patch.runtime && (
-      'sourcePreference' in patch.runtime || 'mirrorPrefix' in patch.runtime
-      || 'autoMirror' in patch.runtime || 'runtimePackUrl' in patch.runtime
+      'mirrorPrefix' in patch.runtime || 'runtimePackUrl' in patch.runtime
       || 'emulatorUrl' in patch.runtime || 'sysimgUrl' in patch.runtime
     )) {
       try {
@@ -2895,10 +2894,9 @@ function registerIpc() {
   });
 
   ipcMain.handle('app:updateOpen', (_e, url) => {
-    // GitHub 和 Gitee 的发布页都允许直接打开：检查更新失败时界面就是靠这个
-    // 让用户手动去下载，只放行 github.com 会把国内用户挡在门外。
+    // Only GitHub pages may be opened from here.
     const raw = String(url || '');
-    const ok = /^https:\/\/(github\.com|gitee\.com)\//i.test(raw);
+    const ok = /^https:\/\/github\.com\//i.test(raw);
     const target = ok ? raw : Updater.repoUrl();
     shell.openExternal(target).catch(() => {});
     return { ok: true, target };

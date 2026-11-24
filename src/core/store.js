@@ -27,8 +27,8 @@ const STORE_BUILD = (() => {
 })();
 
 const DATA_DIR = STORE_BUILD
-  ? path.join(os.homedir(), 'ApkStart', 'data')
-  : path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'apkstart');
+  ? path.join(os.homedir(), 'ApkStartWest', 'data')
+  : path.join(process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming'), 'apkstart-west');
 const ICON_DIR = path.join(DATA_DIR, 'icons');
 const APK_DIR = path.join(DATA_DIR, 'apks');
 const APPS_FILE = path.join(DATA_DIR, 'apps.json');
@@ -79,16 +79,13 @@ const DEFAULT_SETTINGS = {
     dataPartitionGB: 0,
     // 渲染分辨率：越低越流畅、越省电；auto = 按加速状态选 720x1280 / 540x960
     renderSize: 'auto',
-    // 网络加速：给模拟器指定国内公共 DNS。安卓默认的 10.0.2.3 要走主机 DNS，
-    // VPN / 公司网 / 某些运营商下解析会拖到几百毫秒，视频类应用首屏会明显发卡。
-    fastDns: true,
-    // 系统语言：开机时由 emulator -prop 注入（guest 里 setprop 会被 SELinux 拒绝）。
-    // 默认简体中文。设成 en-US 或 off 就回到镜像原生英文。
-    locale: 'zh-CN',
-    // 中文输入法：随包带 AOSP 谷歌拼音输入法，开机后静默安装并启用。
-    // 系统镜像只带 LatinIME（英文键盘），不装就打不了中文。
-    chineseIme: true,
-    chineseImeDefault: true,
+    // Android system language, applied with emulator -change-locale.
+    // ApkStart West default: en-US (the image's native language). The
+    // timezone is never forced, so Android follows the Windows clock.
+    locale: 'en-US',
+    // Optional Chinese (Pinyin) keyboard bundled by upstream. Off by default.
+    chineseIme: false,
+    chineseImeDefault: false,
     // 快照：quickboot 内存快照让二次启动只要几秒，代价是磁盘上多一份约 2~3GB 的
     // ram.bin。磁盘紧张时可以关掉（只影响启动速度，不影响应用数据）。
     keepSnapshot: true,
@@ -129,25 +126,15 @@ const DEFAULT_SETTINGS = {
     sysimgUrl: '',           // 手动指定系统镜像包地址
     compatImage: false,      // ARM 兼容模式：改用 Google Play 镜像（内置 native bridge，可装 ARM-only 应用）
     deployFailedAt: 0,       // 上次自动部署失败的时间戳（0=无失败）。失败后 30 分钟内不再自动重下
-    // 轻量版的运行时整包：默认从本项目 GitHub Release 下载（与「软件更新」同源），
-    // 拿不到时自动退回 dl.google.com 分组件下载。可在这里换成自建镜像地址。
-    preferGithubRuntime: true,
+    // Runtime bundle from this project's GitHub release. Off by default in
+    // ApkStart West: emulator and system image come straight from dl.google.com.
+    preferGithubRuntime: false,
     runtimePackUrl: '',
-    // GitHub 加速镜像前缀（可选）。国内直连 GitHub Releases 经常只有几十 KB/s，
-    // 填成 https://ghfast.top/ 之类的镜像前缀即可把 downloads 请求转过去。
-    // 留空 = 直连（也会先用 8 线程分块试，能跑满带宽）。
+    // Optional download prefix typed by the user (e.g. a corporate proxy).
+    // Empty = direct. There are no built-in third-party mirrors.
     mirrorPrefix: '',
     // 下载并发数：分块下载的连接数。默认 8，弱网/被限速时可调到 16。
     downloadConnections: 8,
-    // 更新/下载的源选择。auto = 同时问 GitHub 与 Gitee、并对每个下载地址实测
-    // 128KB 速度，谁快用谁；也可以强制只走某一边（企业网络只放行一个域名时有用）。
-    sourcePreference: 'auto',
-    // 自动尝试公共 GitHub 加速镜像（ghfast / gh-proxy）。关掉后只用直连 + 自定义前缀。
-    // 这两个是第三方服务，只是转发公开的 release 文件，不涉及账号信息。
-    autoMirror: true,
-    // Gitee 的 releases 接口对公开仓库也要求 access_token（无 token 直接 404），
-    // 想用 Gitee 作为更新源就在这里填一个只读 token；留空则只用 GitHub + 镜像。
-    giteeToken: '',
   },
   sharedDir: path.join(os.homedir(), 'ApkStartShared'),
   deviceSharedDir: '/sdcard/ApkStartShared',
@@ -188,7 +175,9 @@ const DEFAULT_SETTINGS = {
     // 平板排版：把 guest 的逻辑密度覆盖成 190dpi（720 宽 → sw606dp ≥ 600dp，
     // 越过 Android 的平板断点）。红果短剧这类应用只有在平板排版下才有双列剧集页，
     // 也是用户要的「平板模式」。关掉就回到镜像默认密度（手机排版）。
-    tabletMode: true,
+    // ApkStart West: phone layout by default (apps such as Uber / iFood
+    // expect a phone). Turn on in Settings for the upstream tablet layout.
+    tabletMode: false,
     // 窗口承载方式：false=让模拟器开自己的原生窗口（Qt 直接渲染，方向/缩放/输入
     // 全由它自己管，帧率和拖动都跟手）；
     // true=把安卓画面用 SetParent 塞进 ApkStart 的壳窗口（观感统一，标题栏带

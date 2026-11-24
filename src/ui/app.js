@@ -1055,9 +1055,6 @@ function fillSettings(s) {
   $('setMemory').value = s.engine.memoryMB;
   $('setCores').value = s.engine.cores;
   $('setIdle').value = s.engine.idleShutdownMinutes;
-  if ($('setSourcePref')) $('setSourcePref').value = (s.runtime && s.runtime.sourcePreference) || 'auto';
-  if ($('setAutoMirror')) $('setAutoMirror').checked = (s.runtime && s.runtime.autoMirror) !== false;
-  if ($('setGiteeToken')) $('setGiteeToken').value = (s.runtime && s.runtime.giteeToken) || '';
   if ($('setMirrorPrefix')) $('setMirrorPrefix').value = (s.runtime && s.runtime.mirrorPrefix) || '';
   if ($('setConnections')) $('setConnections').value = Number((s.runtime && s.runtime.downloadConnections) || 8);
   $('setAudio').checked = s.engine.audio !== false;
@@ -1090,9 +1087,8 @@ function fillSettings(s) {
   if ($('setGpuPreference')) $('setGpuPreference').value = eng.gpuPreference || 'auto';
   if ($('setRenderSize')) $('setRenderSize').value = eng.renderSize || 'auto';
   if ($('setDataGB')) $('setDataGB').value = String(Number(eng.dataPartitionGB || 0));
-  if ($('setFastDns')) $('setFastDns').checked = eng.fastDns !== false;
-  if ($('setLocale')) $('setLocale').value = eng.locale || 'zh-CN';
-  if ($('setChineseIme')) $('setChineseIme').checked = eng.chineseIme !== false;
+  if ($('setLocale')) $('setLocale').value = eng.locale || 'en-US';
+  if ($('setChineseIme')) $('setChineseIme').checked = eng.chineseIme === true;
   if ($('setKeepSnapshot')) $('setKeepSnapshot').checked = eng.keepSnapshot !== false;
   $('setDisplayMode').value = d.mode === 'fullscreen' ? 'fullscreen' : 'window';
   if ($('setAutoFullscreen')) $('setAutoFullscreen').value = d.autoFullscreenOnLaunch === true ? 'on' : 'off';
@@ -1608,8 +1604,7 @@ function bindUpdate() {
     }
   });
 
-  // 打开设置时如果还没结果，就顺手查一次（放后台，不打扰）
-  runCheck(true).catch(() => {});
+  // ApkStart West: no automatic update check; only when the user clicks.
 }
 
 function bindSettings() {
@@ -1699,9 +1694,6 @@ function bindSettings() {
   if ($('setRenderSize')) {
     $('setRenderSize').addEventListener('change', (e) => save({ engine: { renderSize: e.target.value } }));
   }
-  if ($('setFastDns')) {
-    $('setFastDns').addEventListener('change', (e) => save({ engine: { fastDns: e.target.checked } }));
-  }
   if ($('setLocale')) {
     $('setLocale').addEventListener('change', async (e) => {
       state.settings = await api.setSettings({ engine: { locale: e.target.value } });
@@ -1778,15 +1770,6 @@ function bindSettings() {
     });
   }
   $('setIdle').addEventListener('change', (e) => save({ engine: { idleShutdownMinutes: Number(e.target.value) || 0 } }));
-  if ($('setSourcePref')) {
-    $('setSourcePref').addEventListener('change', (e) => save({ runtime: { sourcePreference: e.target.value } }));
-  }
-  if ($('setAutoMirror')) {
-    $('setAutoMirror').addEventListener('change', (e) => save({ runtime: { autoMirror: e.target.checked } }));
-  }
-  if ($('setGiteeToken')) {
-    $('setGiteeToken').addEventListener('change', (e) => save({ runtime: { giteeToken: e.target.value.trim() } }));
-  }
   if ($('setMirrorPrefix')) {
     $('setMirrorPrefix').addEventListener('change', (e) => save({ runtime: { mirrorPrefix: e.target.value.trim() } }));
   }

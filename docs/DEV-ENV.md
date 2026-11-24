@@ -42,10 +42,9 @@ $env:PATH = 'C:\Users\15656\.workbuddy\binaries\PortableGit\versions\1.3.0\cmd;'
             'C:\Users\15656\.workbuddy\binaries\node\versions\22.22.2-6;' + $env:PATH
 ```
 
-依赖被清掉时重装（19 秒左右，走镜像）：
+依赖被清掉时重装：
 
 ```powershell
-$env:ELECTRON_MIRROR='https://npmmirror.com/mirrors/electron/'
 npm ci --no-audit --no-fund
 ```
 

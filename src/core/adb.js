@@ -921,14 +921,13 @@ class AdbClient {
       // 盖住应用内容、按键挤在左下角（用户反馈的「按键错位」）。
       // 见 disableLauncherTaskbar()：这里每次启动都补一刀，幂等且只多一次往返。
       'settings put global enable_taskbar 0',
-      // 联网验证：安卓默认拿 connectivitycheck.gstatic.com 判断「是否真能上网」，
-      // 国内连不上它，系统就一直给网络打「!」标记（已连接但无法访问互联网），
-      // 部分应用据此自我判定离线、拒绝加载内容。换成国内返回 204 的端点。
-      // 每次启动都写一次（幂等、单条 shell 里，几乎零成本），这样即使从旧快照
-      // 恢复、或用户手动改过系统设置，也能自动纠正回来。
-      'settings put global captive_portal_http_url http://connect.rom.miui.com/generate_204',
-      'settings put global captive_portal_https_url https://connect.rom.miui.com/generate_204',
-      'settings put global captive_portal_mode 0',
+      // Connectivity check: ApkStart West keeps Android's own default
+      // (connectivitycheck.gstatic.com, Google). Upstream pointed it at a
+      // Xiaomi server in China; deleting the keys undoes that on AVDs and
+      // snapshots that still carry the old values.
+      'settings delete global captive_portal_http_url',
+      'settings delete global captive_portal_https_url',
+      'settings delete global captive_portal_mode',
       // 注意：这里不要再写 wm user-rotation / accelerometer_rotation。
       // 方向由 setOrientation / resetDisplayOverrides 按当前横竖屏状态统一定，
       // 在这里写死 lock 0 会把横屏方向覆盖回竖屏（画面躺倒）。
@@ -1142,19 +1141,12 @@ class AdbClient {
   }
 
   /**
-   * 保证系统语言是简体中文。
-   * persist.sys.locale 是 SELinux 保护的只读属性，运行时改不了（会报
-   * "Failed to set property"），真正生效靠 emulator 启动时的 -prop 注入。
-   * 这里做的是能做的部分：把应用级 locale 和时区设好，让界面立刻中文、时间正确。
+   * Apply the app-level system locale. The real switch happens at boot with
+   * emulator -change-locale. ApkStart West never touches the timezone: the
+   * emulator hands Android the Windows timezone, like a phone bought locally.
    */
-  async ensureChineseLocale(locale = 'zh-CN') {
-    const cmds = [
-      'settings put system system_locales ' + locale,
-      'setprop persist.sys.timezone Asia/Shanghai',
-      // 24 小时制 + 中文常见的日期格式
-      'settings put system time_12_24 24',
-    ];
-    await this.shell(cmds.join(' ; '), { timeout: 12000 }).catch(() => '');
+  async ensureLocale(locale = 'en-US') {
+    await this.shell('settings put system system_locales ' + locale, { timeout: 12000 }).catch(() => '');
     return true;
   }
 

@@ -19,9 +19,11 @@ const http = require('http');
 const { URL } = require('url');
 const { cmpVer } = require('./version');
 
-const OWNER_GH = 'RoutineMiku';
-const OWNER_GITEE = 'daily-miku';
-const REPO = 'apkstart';
+// ApkStart West: the only update source is our own GitHub repo. Upstream's
+// second source (a mirror hosted in China) and the third-party GitHub proxies
+// were removed on purpose; see docs/NO-CHINA.md.
+const OWNER_GH = 'mvoloch';
+const REPO = 'apkstart-west';
 
 const SOURCES = {
   github: {
@@ -30,19 +32,7 @@ const SOURCES = {
     api: `https://api.github.com/repos/${OWNER_GH}/${REPO}`,
     web: `https://github.com/${OWNER_GH}/${REPO}`,
   },
-  gitee: {
-    id: 'gitee',
-    name: 'Gitee',
-    api: `https://gitee.com/api/v5/repos/${OWNER_GITEE}/${REPO}`,
-    web: `https://gitee.com/${OWNER_GITEE}/${REPO}`,
-  },
 };
-
-/** 已知可用的 GitHub 加速前缀。只在用户开启 autoMirror 且未自定义时参与测速。 */
-const KNOWN_MIRRORS = [
-  'https://ghfast.top/',
-  'https://gh-proxy.com/',
-];
 
 /**
  * 一次测速的采样字节数。
@@ -203,13 +193,11 @@ function groupParts(assets) {
   return { list: out.filter((a) => !a.broken), broken: [...groups.values()].filter((g) => g.broken).map((g) => g.name) };
 }
 
-/** mirrors 列表：用户自定义优先，其次内置（autoMirror 关掉就只用自定义的） */
+/** Mirror prefixes: only one the user typed in settings (or APKSTART_MIRROR). No built-in proxies. */
 function mirrorList(settings) {
   const r = (settings && settings.runtime) || {};
   const custom = String(r.mirrorPrefix || process.env.APKSTART_MIRROR || '').trim();
-  if (custom) return [custom];
-  if (r.autoMirror === false) return [];
-  return KNOWN_MIRRORS.slice();
+  return custom ? [custom] : [];
 }
 
 class Sources {
@@ -264,10 +252,8 @@ class Sources {
       `ApkStart-${ver}-Setup.exe`,
       `ApkStart-runtime-${tag}.zip`,
     ];
-    // GitHub 和 Gitee 都支持 /releases/download/<tag>/<文件名> 这种规范地址
-    // （实测 Gitee 会 302 到 foruda.gitee.com 的附件地址，能正常下到完整字节），
-    // 所以没有 API 时也能拼出可用的下载地址。Gitee 上没有的资产会 404，
-    // 后面的测速排序会自动跳过它。
+    // GitHub serves /releases/download/<tag>/<file> directly, so a usable
+    // download address can be built even without the API.
     const assets = names.map((n) => ({
       name: n,
       size: 0,
@@ -285,15 +271,8 @@ class Sources {
   }
 
   async fetchReleases() {
-    const prefs = String((this.settings().runtime || {}).sourcePreference || 'auto');
-    const ids = prefs === 'github' || prefs === 'gitee' ? [prefs] : ['github', 'gitee'];
-    // 公开仓库的 releases 接口匿名就能读；仓库若是私有的，Gitee 会回 404
-    // "Not Found Project"（而不是 401），那种情况才需要在这里填一个只读 token。
-    // 另外匿名调用有频率限制，感兴趣的用户可以填 token 提高额度。
-    const token = String((this.settings().runtime || {}).giteeToken || '').trim();
-    const withToken = (id, url) => (id === 'gitee' && token
-      ? `${url}${url.includes('?') ? '&' : '?'}access_token=${encodeURIComponent(token)}`
-      : url);
+    const ids = Object.keys(SOURCES);
+    const withToken = (_id, url) => url;
 
     const jobs = ids.map(async (id) => {
       const s = SOURCES[id];
@@ -318,9 +297,7 @@ class Sources {
         } catch (_) { /* 兜底也不行 */ }
         const limited = /\b(403|429)\b/.test(e.message);
         if (limited) this._blocked.set(id, Date.now() + this._blockMs);
-        const hint = limited
-          ? '（被限流，已暂停使用该源一段时间）'
-          : (id === 'gitee' && !token ? '（可稍后重试，或在设置里填只读 token 提高额度）' : '');
+        const hint = limited ? ' (rate-limited; this source is paused for a while)' : '';
         return { source: id, name: s.name, web: s.web, error: `${e.message}${hint}` };
       }
     });
@@ -332,7 +309,7 @@ class Sources {
    * 这样即使 Gitee 只放了元数据、资产在 GitHub，也能两条路都试。
    */
   async latest({ force = false } = {}) {
-    const pref = String((this.settings().runtime || {}).sourcePreference || 'auto');
+    const pref = 'github';
     const cached = this._relCache;
     if (!force && cached.value && cached.key === pref && Date.now() - cached.at < this._relTtl) {
       return cached.value;
@@ -503,4 +480,4 @@ class Sources {
   }
 }
 
-module.exports = { Sources, SOURCES, measure, KNOWN_MIRRORS, withMirror, mirrorList };
+module.exports = { Sources, SOURCES, measure, withMirror, mirrorList };

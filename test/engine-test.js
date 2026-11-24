@@ -389,7 +389,7 @@ function assert(cond, msg) { if (!cond) throw new Error(msg || '断言失败'); 
   console.log('\n[provision.js 兼容镜像 / 完整版]');
 
   await test('playImageInfo 校验 API 34 兼容镜像完整性', async () => {
-    const dir = path.join(TMP, 'apkstart', 'runtime', 'system-images', 'android-34', 'google_apis_playstore', 'x86_64');
+    const dir = path.join(TMP, 'apkstart-west', 'runtime', 'system-images', 'android-34', 'google_apis_playstore', 'x86_64');
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'kernel-ranchu'), 'k');
     const prov = new Provisioner(path.join(__dirname, '..'));
@@ -400,13 +400,12 @@ function assert(cond, msg) { if (!cond) throw new Error(msg || '断言失败'); 
     assert(info.ok && info.api === '34' && info.tag === 'google_apis_playstore', `应判定 API 34 兼容镜像就绪：${JSON.stringify(info)}`);
   });
 
-  await test('完整版品牌资产与抖音联系入口就位', async () => {
+  await test('About section links the West repo and credits upstream', async () => {
     const root = path.join(__dirname, '..');
-    assert(fs.existsSync(path.join(root, 'src', 'ui', 'assets', 'douyin-qr.jpg')), '缺少抖音二维码图片');
     assert(fs.existsSync(path.join(root, 'build', 'fetch-runtime.js')), '缺少完整版运行时组装脚本');
     const html = fs.readFileSync(path.join(root, 'src', 'ui', 'index.html'), 'utf8');
-    assert(html.includes('douyin-qr.jpg'), '关于区未引用抖音二维码');
-    assert(html.includes('https://v.douyin.com/9TIIxVCANig/'), '缺少抖音主页链接');
+    assert(html.includes('https://github.com/mvoloch/apkstart-west'), 'About must link the West repo');
+    assert(html.includes('https://github.com/RoutineMiku/apkstart'), 'About must credit upstream');
   });
 
   console.log(results.join('\n'));

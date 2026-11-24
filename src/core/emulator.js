@@ -630,7 +630,7 @@ class EmulatorEngine {
    * 设成 'en-US' 或 'off' 就回到镜像原生英文。
    */
   _guestLocale() {
-    const v = String(this.settings?.engine?.locale || 'zh-CN').trim();
+    const v = String(this.settings?.engine?.locale || 'en-US').trim();
     if (!v || v === 'off' || /^false$/i.test(v)) return '';
     return v;
   }
@@ -686,12 +686,9 @@ class EmulatorEngine {
     // 用户可在设置里改成其它 locale 或关掉（engine.locale='off'）。
     const locale = this._guestLocale();
     if (locale) args.push('-change-locale', locale);
-    // DNS：安卓默认用 10.0.2.3（转发到主机 DNS）。主机走 VPN / 公司网 / 某些运营商
-    // 时，一次解析能拖到几百毫秒，表现为「页面转圈半天才开始加载」。给一份国内公共
-    // DNS 作为首选，失败时系统仍会回退。用户可在设置里关掉（内网域名场景）。
-    if (this.settings?.engine?.fastDns !== false) {
-      args.push('-dns-server', '223.5.5.5,119.29.29.29');
-    }
+    // DNS: Android uses 10.0.2.3, which forwards to the host's own DNS.
+    // ApkStart West never overrides it (upstream sent every lookup to
+    // Alibaba and Tencent public DNS in China).
     if (lcd) args.push('-skin', `${lcd.w}x${lcd.h}`);
     if (headless) {
       args.push('-no-window');
@@ -1079,8 +1076,8 @@ class EmulatorEngine {
     let reachable = null;
     if (waitMs > 0) {
       const probe = await sh(
-        "echo -e 'GET /generate_204 HTTP/1.0\\r\\nHost: connect.rom.miui.com\\r\\n\\r\\n' "
-        + "| nc -w 4 connect.rom.miui.com 80 2>/dev/null | head -1",
+        "echo -e 'GET /generate_204 HTTP/1.0\\r\\nHost: connectivitycheck.gstatic.com\\r\\n\\r\\n' "
+        + "| nc -w 4 connectivitycheck.gstatic.com 80 2>/dev/null | head -1",
         7000,
       );
       reachable = /HTTP\/1\.[01]\s+204/.test(probe);
@@ -1120,14 +1117,13 @@ class EmulatorEngine {
         });
       } catch (_) { resolve(''); }
     });
-    // 连上之后顺手把「联网验证」的探测地址换成国内可达的。
-    // 安卓默认拿 connectifitycheck.gstatic.com 判断「是否真能上网」，国内连不上它，
-    // 系统就一直给网络打「!」标记（已连接但无法访问互联网）。部分应用会因此
-    // 自我判定为离线、拒绝加载内容。换成一个返回 204 的国内端点即可。
+    // Once connected, restore Android's default connectivity check
+    // (connectivitycheck.gstatic.com). Upstream overrode it with a Xiaomi
+    // server in China; deleting the keys removes any value left behind.
     const tune = async () => {
-      await sh('settings put global captive_portal_http_url http://connect.rom.miui.com/generate_204');
-      await sh('settings put global captive_portal_https_url https://connect.rom.miui.com/generate_204');
-      await sh('settings put global captive_portal_mode 0');
+      await sh('settings delete global captive_portal_http_url');
+      await sh('settings delete global captive_portal_https_url');
+      await sh('settings delete global captive_portal_mode');
     };
     // 已经连上就别折腾了
     if (/Wifi is connected/i.test(await sh('cmd wifi status'))) {

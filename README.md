@@ -36,10 +36,9 @@
 
 ## 下载即用（不想编译）
 
-两个源内容一致，国内建议用 Gitee：
+下载地址：
 
-- GitHub：[github.com/RoutineMiku/apkstart/releases](https://github.com/RoutineMiku/apkstart/releases)
-- Gitee：[gitee.com/daily-miku/apkstart/releases](https://gitee.com/daily-miku/apkstart/releases)（国内直连快得多）
+- GitHub：[github.com/mvoloch/apkstart-west/releases](https://github.com/mvoloch/apkstart-west/releases)
 
 安装包（三种形态，内容与版本号完全一致）：
 
