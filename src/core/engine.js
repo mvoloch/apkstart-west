@@ -20,6 +20,19 @@ const container = require('./container');
 const backends = require('./backends');
 const { tr } = require('./i18n');
 
+/**
+ * Whether a failing boot probe should restart the adb server.
+ * "offline" means the emulator transport exists and Android is still booting;
+ * a restart then drops the transport just as the guest's adbd appears, so it
+ * is allowed only late (the emulator may genuinely have missed the server) and
+ * rarely. Any other state keeps the original rule.
+ */
+function shouldHealAdb({ errStreak, sinceStart, sinceHeal, state }) {
+  if (errStreak < 6) return false;
+  if (state === 'offline') return sinceStart > 300000 && sinceHeal > 120000;
+  return sinceStart > 25000 && sinceHeal > 30000;
+}
+
 const LOG_DIR = path.join(store.DATA_DIR, 'logs');
 const MONITOR_PORT = 5556;
 const EMU_PORT = 5554;
@@ -389,8 +402,9 @@ class Runtime {
           // 双重确认 unauthorized，命中就作废旧快照冷启动 + 给出准确诊断，不再空等。
           const raw = String((e && (e.raw || e.stdout || e.message)) || '');
           let unauthorized = isUnauthorizedError(raw);
+          let st = '';
           if (!unauthorized) {
-            const st = await c.deviceState().catch(() => '');
+            st = await c.deviceState().catch(() => '');
             unauthorized = st === 'unauthorized';
           }
           if (unauthorized) {
@@ -407,8 +421,11 @@ class Runtime {
             return 'fatal';
           }
           // 其它 adb 传输异常：沿用原来的重启 server 自愈
+          // ...but not while the device is listed as "offline": the transport is up
+          // and Android is still booting. Restarting the server then drops the
+          // emulator transport right when the guest's adbd first appears.
           const now = Date.now();
-          if (errStreak >= 6 && now - probeStart > 25000 && now - lastHeal > 30000) {
+          if (shouldHealAdb({ errStreak, sinceStart: now - probeStart, sinceHeal: now - lastHeal, state: st })) {
             lastHeal = now;
             onLog(tr('adb connection problem; restarting the adb server and waiting again…'));
             await this.emulator.resetAdbServer().catch(() => {});
@@ -1628,4 +1645,4 @@ class Runtime {
   get bootLog() { return this._bootLog.slice(-60); }
 }
 
-module.exports = { Runtime, MONITOR_PORT };
+module.exports = { Runtime, MONITOR_PORT, shouldHealAdb };

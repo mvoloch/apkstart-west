@@ -77,7 +77,6 @@
   "qemu-img could not create the virtual disk: {detail}": "O qemu-img não conseguiu criar o disco virtual: {detail}",
   "qemu-img.exe was not found; install QEMU first": "O qemu-img.exe não foi encontrado; instale o QEMU primeiro",
   "The virtual disk was created": "O disco virtual foi criado",
-
   "adb is missing: click \"Deploy\" to download it automatically": "Falta o adb: clique em \"Implantar\" para baixá-lo automaticamente",
   "Hardware acceleration was not detected: falling back to software emulation automatically (the first start will be much slower; no manual setup needed)": "A aceleração de hardware não foi detectada: será usada a emulação por software automaticamente (a primeira inicialização será bem mais lenta; não é preciso configurar nada)",
   "Android debugging authorization not completed (you need to click \"Allow\" once)": "Autorização de depuração do Android não concluída (você precisa clicar em \"Permitir\" uma vez)",
@@ -128,7 +127,6 @@
   "Network is back ({ip}, gateway {gateway}); a working snapshot has been saved.": "A rede voltou ({ip}, gateway {gateway}); um snapshot que funciona foi salvo.",
   "reachable": "acessível",
   "Still offline after the reset. Check whether your network or firewall blocks the emulator (netsimd uses a local loopback port).": "Ainda sem conexão depois da redefinição. Verifique se a sua rede ou o firewall bloqueia o emulador (o netsimd usa uma porta de loopback local).",
-
   "Exited normally": "Encerrado normalmente",
   "Invalid start parameters or environment": "Parâmetros de inicialização ou ambiente inválidos",
   "0xC0000005 access violation, rendering backend crashed": "0xC0000005 violação de acesso, o back-end de renderização travou",
@@ -166,7 +164,6 @@
   "Boot timed out (the first boot may be slow, or hardware acceleration is not working)": "Tempo esgotado na inicialização (a primeira inicialização pode ser lenta, ou a aceleração de hardware não está funcionando)",
   "{error}; retrying with another set of parameters…": "{error}; tentando de novo com outro conjunto de parâmetros…",
   "The runtime still could not start after several attempts ({title}).\n{hint}\n\nAttempts: {attempts}\nDiagnostic report: {file}": "O runtime ainda não conseguiu iniciar depois de várias tentativas ({title}).\n{hint}\n\nTentativas: {attempts}\nRelatório de diagnóstico: {file}",
-
   "hardware acceleration": "aceleração de hardware",
   "software emulation": "emulação por software",
   "Software emulation with acceleration off (slow, but most compatible)": "Emulação por software com a aceleração desligada (lenta, mas a mais compatível)",
@@ -205,7 +202,6 @@
   "snapshot on demand": "snapshot sob demanda",
   "cold start": "inicialização a frio",
   "lightweight container": "contêiner leve",
-
   "Runtime": "Runtime",
   "Android virtual machine process, boot stage, snapshots and leftover locks": "Processo da máquina virtual Android, etapa de inicialização, snapshots e bloqueios remanescentes",
   "Device connection": "Conexão do dispositivo",
@@ -266,5 +262,6 @@
   "Update checks ask several sources at once, so one being down does not matter; if all of them are down, check your network or proxy.": "A verificação de atualizações consulta várias fontes ao mesmo tempo, então uma fora do ar não atrapalha; se todas estiverem fora do ar, verifique sua rede ou proxy.",
   "{n} errors in the runtime log": "{n} erros no log do runtime",
   "The latest run left error records; open the diagnostic report to see the full context.": "A última execução deixou registros de erro; abra o relatório de diagnóstico para ver o contexto completo.",
-  "Only pure software emulation is possible: booting takes minutes and frames are easily dropped. Turn on \"Windows Hypervisor Platform\" and restart.": "Só é possível a emulação puramente por software: a inicialização leva minutos e é fácil perder quadros. Ative a \"Plataforma do Hipervisor do Windows\" e reinicie."
+  "Only pure software emulation is possible: booting takes minutes and frames are easily dropped. Turn on \"Windows Hypervisor Platform\" and restart.": "Só é possível a emulação puramente por software: a inicialização leva minutos e é fácil perder quadros. Ative a \"Plataforma do Hipervisor do Windows\" e reinicie.",
+  "Android finished booting but is not answering yet; waiting a little longer…": "O Android terminou de iniciar, mas ainda não responde; aguardando mais um pouco…"
 }

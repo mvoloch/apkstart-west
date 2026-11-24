@@ -25,6 +25,14 @@ const SNAPSHOT_NAME = 'apkstart';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Minimum wait for a first boot on fresh data: Android turns adb on only at its end. */
+const FIRST_BOOT_MIN_MS = 600000;
+
+/** Boot timeout for one attempt: never below FIRST_BOOT_MIN_MS on a first boot. */
+function firstBootTimeout(baseMs, firstBoot) {
+  return firstBoot ? Math.max(baseMs, FIRST_BOOT_MIN_MS) : baseMs;
+}
+
 /**
  * Windows 上把 emulator/qemu 的退出码翻译成人话。
  * 0xC0000005（3221225477）是崩溃里最常见的那个：访问冲突，实测多由
@@ -531,7 +539,14 @@ class EmulatorEngine {
    *     之后所有 setxattr 返回 ENOSPC → SELinux 标签写不进去 → netd/media/tombstoned
    *     一起 exit 1 → 开机卡在启动动画，adb 永远 offline。
    */
-  ensureDataPartition(avdDir, dataMB = 4096) {
+  /** Data-partition messages also go to logs/emulator.log: the in-memory log keeps only 600 lines. */
+  _dataLog(line) {
+    this.log(line);
+    try { this._logWrite(path.join(store.DATA_DIR, 'logs', 'emulator.log'), `[data] ${line}
+`); } catch (_) { /* ignore */ }
+  }
+
+  ensureDataPartition(avdDir, dataMB = 4096, retried = false) {
     const emulatorExe = this.locate().emulatorExe;
     if (!emulatorExe || !fs.existsSync(emulatorExe)) return { ok: false, reason: 'no-emulator' };
     try { fs.mkdirSync(avdDir, { recursive: true }); } catch (_) { /* ignore */ }
@@ -548,6 +563,12 @@ class EmulatorEngine {
       const fsBytes = userdata.fsBytes(img);
       const fsOk = fsBytes >= Math.min(size, wantBytes) * 0.95;
       if (size >= wantBytes && fsOk) return { ok: true, created: false, size, fsBytes };
+      // Android has already booted on this image: its writes live in the .qcow2
+      // delta disk. Changing the base image underneath corrupts /data, so leave it.
+      if (this._hasDataOverlay(img)) {
+        this._dataLog(`userdata is ${Math.round(fsBytes / 1048576)} MB but in use by the delta disk; not resizing it in place`);
+        return { ok: false, created: false, size, fsBytes, overlay: true };
+      }
       // 容量配置变大了（或文件系统没长到位）：就地扩容，不重建、保留已装应用
       try {
         userdata.clearEncryptFlag(img);
@@ -555,10 +576,13 @@ class EmulatorEngine {
         this._resize2fs(img);
         userdata.setEncryptFlag(img);
         const grown = userdata.fsBytes(img);
-        this.log(`userdata resized: file ${size} → ${wantBytes}, filesystem ${fsBytes} → ${grown}`);
+        this._dataLog(`userdata resized: file ${size} → ${wantBytes}, filesystem ${fsBytes} → ${grown}`);
         return { ok: true, created: false, grown: true, size: wantBytes, fsBytes: grown };
       } catch (e) {
-        this.log(`Resizing userdata failed (keeping the existing partition): ${e.message}`);
+        // The encrypt bit was cleared above; leaving it off makes Android unable to
+        // set up file-based encryption, and the boot never finishes.
+        try { userdata.setEncryptFlag(img); } catch (_) { /* ignore */ }
+        this._dataLog(`Resizing userdata failed (keeping the existing partition): ${e.message}`);
         // 老分区仍然可用，但必须如实告诉调用方「这次没扩成」，不能让设置页显示成功
         return { ok: false, created: false, size, fsBytes, error: e.message };
       }
@@ -572,13 +596,21 @@ class EmulatorEngine {
       fs.writeFileSync(img, userdata.buildEmptyExt4({ sizeMB: 64, encrypt: false }));
       this._qemuImg('resize', img, wantBytes);
       this._resize2fs(img);
+      // Must happen now: after the first boot the partition is metadata-encrypted.
+      this._addJournal(img);
       userdata.setEncryptFlag(img);
-      this.log(`Rebuilt userdata: ${(wantBytes / 1024 / 1024 / 1024).toFixed(1)}GB ext4 (4K block, FBE supported)`);
+      this._dataLog(`Rebuilt userdata: ${(wantBytes / 1024 / 1024 / 1024).toFixed(1)}GB ext4 (4K block, FBE supported)`);
       return { ok: true, created: true, size: wantBytes };
     } catch (e) {
       // 尽力而为：哪怕扩容失败，也要把 encrypt 位补回去，让 FBE 能初始化（分区会偏小）
       try { userdata.setEncryptFlag(img); } catch (_) { /* ignore */ }
-      this.log(`Rebuilding userdata failed: ${e.message}`);
+      this._dataLog(`Rebuilding userdata failed: ${e.message}`);
+      // A 64 MB /data fills up during the first boot and Android never finishes
+      // starting. Remove it so the next attempt builds it again from scratch.
+      if (userdata.fsBytes(img) < wantBytes * 0.95) {
+        try { fs.rmSync(img, { force: true }); } catch (_) { /* ignore */ }
+        if (!retried) return this.ensureDataPartition(avdDir, dataMB, true);
+      }
       return { ok: false, created: true, error: e.message };
     }
   }
@@ -603,6 +635,26 @@ class EmulatorEngine {
       cwd: bin, windowsHide: true, encoding: 'utf8', timeout: 180000,
     });
     if (r.status !== 0) throw new Error(tr('resize2fs failed: {detail}', { detail: (r.stderr || '').trim() || r.status }));
+  }
+
+  /**
+   * Give the freshly built /data an ext4 journal (bundled tune2fs.exe). Without
+   * one, any hard stop leaves lost or detached files, and on the first boot that
+   * can be the setting that enables adb. Best effort: a failure is logged and the
+   * partition stays usable without a journal, as before.
+   */
+  _addJournal(img) {
+    const bin = path.join(path.dirname(this.locate().emulatorExe), 'bin64');
+    const exe = path.join(bin, 'tune2fs.exe');
+    if (!fs.existsSync(exe)) { this._dataLog('tune2fs.exe is missing; /data has no journal'); return false; }
+    const r = spawnSync(exe, ['-j', img], {
+      cwd: bin, windowsHide: true, encoding: 'utf8', timeout: 180000,
+    });
+    if (r.status !== 0) {
+      this._dataLog(`Adding a journal to /data failed (continuing without one): ${(r.stderr || '').trim() || r.status}`);
+      return false;
+    }
+    return true;
   }
 
   /** emulator 依赖这些环境变量定位 SDK / AVD；中文路径一律转 8.3 短路径 */
@@ -906,6 +958,11 @@ class EmulatorEngine {
 
   /** 强杀当前尝试（含 qemu 子进程树） */
   async killAttempt() {
+    // Ask the emulator to shut down on its own first. A forced kill in the middle
+    // of a boot leaves the journal-less /data with lost or detached files; on the
+    // first boot that can be the setting that turns adb on, and the guest then
+    // stays "offline" for good (seen on the XPS, 2026-11-24). Force is the fallback.
+    await this._gracefulStop().catch(() => {});
     const proc = this.proc;
     this.proc = null;
     if (proc) {
@@ -918,6 +975,34 @@ class EmulatorEngine {
     // proc 句柄常常已经没了（emulator.exe 启动完就退出，qemu 是 detached 的独立进程），
     // 不按进程名兜底清一遍，下一轮就会被 AVD 锁挡成 FATAL。
     await this.killOrphanProcesses().catch(() => {});
+  }
+
+  /**
+   * Graceful shutdown through the emulator console (`adb emu kill` works even
+   * while the device is "offline"), then wait up to `waitMs` for it to exit.
+   * @returns {Promise<boolean>} true when the console port is closed
+   */
+  async _gracefulStop({ waitMs = 20000 } = {}) {
+    if (!(await this._consoleAlive())) return true;
+    let adb = 'adb';
+    try { adb = this.provisioner.adbVersionPath() || 'adb'; } catch (_) { /* PATH */ }
+    const adbPort = Number(process.env.ANDROID_ADB_SERVER_PORT) || this.adbPort || 5044;
+    const env = { ...process.env, ANDROID_ADB_SERVER_PORT: String(adbPort) };
+    const serial = this.serial || `emulator-${this.port || 5554}`;
+    await new Promise((resolve) => {
+      try {
+        execFile(adb, ['-s', serial, 'emu', 'kill'], { timeout: 10000, windowsHide: true, env }, () => resolve());
+      } catch (_) { resolve(); }
+    });
+    const until = Date.now() + waitMs;
+    while (Date.now() < until) {
+      // eslint-disable-next-line no-await-in-loop
+      if (!(await this._consoleAlive())) return true;
+      // eslint-disable-next-line no-await-in-loop
+      await sleep(500);
+    }
+    this.log('The emulator did not shut down on request; forcing it to close');
+    return false;
   }
 
   /**
@@ -1386,7 +1471,11 @@ class EmulatorEngine {
       }
 
       const started = Date.now();
-      const timeout = plan.bootTimeoutMs || 240000;
+      // A first boot on fresh data (new partition or -wipe-data) takes much longer:
+      // 195 s was measured on the XPS, and adb only comes up at its very end.
+      const firstBoot = !!(forceWipe || avd.wipePending || plan.wipe || (avd.data && avd.data.created));
+      let timeout = firstBootTimeout(plan.bootTimeoutMs || 240000, firstBoot);
+      let extended = false;
       let ok = false;
       let fatal = false;
       let sawBooting = false;
@@ -1421,6 +1510,14 @@ class EmulatorEngine {
         if (Date.now() - lastNotice > 15000) {
           lastNotice = Date.now();
           onLog(tr('Booting… {s}s', { s: Math.round((Date.now() - started) / 1000) }));
+        }
+        // Android itself says it booted but adb is not up yet: give it one more
+        // window instead of killing it (a kill here is what corrupts /data).
+        if (!extended && Date.now() - started > timeout - 3000
+          && this._attemptLines(logStart, 400).some((l) => /Boot completed in/.test(l))) {
+          extended = true;
+          timeout += 180000;
+          onLog(tr('Android finished booting but is not answering yet; waiting a little longer…'));
         }
         // eslint-disable-next-line no-await-in-loop
         await sleep(interval);
@@ -1690,4 +1787,4 @@ class EmulatorEngine {
   }
 }
 
-module.exports = { EmulatorEngine, AVD_NAME, SNAPSHOT_NAME };
+module.exports = { EmulatorEngine, AVD_NAME, SNAPSHOT_NAME, firstBootTimeout };
