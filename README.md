@@ -18,6 +18,9 @@ ApkStart West is a fork of [ApkStart](https://github.com/RoutineMiku/apkstart) b
 - **Shared folder.** `%USERPROFILE%\ApkStartShared` on the PC syncs with `/sdcard/ApkStartShared` in Android.
 - **English or Portuguese interface** (Settings → Basics and install → Interface language). Android itself starts in English (changeable) and uses the PC's time zone.
 
+<p align="center"><img src="docs/images/west-app.png" alt="ApkStart West main window with an installed app" width="720" /></p>
+<p align="center"><img src="docs/images/west-settings.png" alt="ApkStart West settings" width="720" /></p>
+
 ## What changed from upstream
 
 | Upstream ApkStart | ApkStart West |
