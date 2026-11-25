@@ -32,7 +32,7 @@ ApkStart West is a fork of [ApkStart](https://github.com/RoutineMiku/apkstart) b
 | Updater could replace the app with upstream releases | Updater only looks at `mvoloch/apkstart-west`; separate data folder (`%APPDATA%\apkstart-west`), install id and taskbar identity, so it never touches an upstream install |
 | WeChat / Douyin QR codes and links, Microsoft Store package of upstream | Removed |
 
-The full audit, naming every removed host and DNS server, with every host the code can reach and a traffic capture of a real run, is in [docs/NO-CHINA.md](docs/NO-CHINA.md). A test (`test/no-china-test.js`, the first step of `npm test`) fails if any of the removed hosts or DNS servers comes back.
+The full audit, naming every removed host and DNS server, with every host the code can reach and the traffic recorded in real runs (Android packet capture and Windows connection log), is in [docs/NO-CHINA.md](docs/NO-CHINA.md). A test (`test/no-china-test.js`, the first step of `npm test`) fails if any of the removed hosts or DNS servers comes back.
 
 ## Requirements
 
@@ -88,7 +88,7 @@ O ApkStart West é um fork do [ApkStart](https://github.com/RoutineMiku/apkstart
 - **Pasta compartilhada** entre o PC (`%USERPROFILE%\ApkStartShared`) e o Android (`/sdcard/ApkStartShared`).
 - **Interface em inglês ou português** (Configurações → Básico e instalação → Idioma da interface). O Android começa em inglês (dá para mudar) e usa o fuso horário do PC.
 
-O que mudou em relação ao original: saem o servidor de código na China e os dois proxies de terceiros do GitHub; sai o DNS chinês forçado e o Android passa a usar o DNS do seu PC; a verificação de conexão volta para a do Google, em vez da de um fabricante chinês; o Android deixa de vir em chinês com fuso da China; o atualizador só olha para `mvoloch/apkstart-west` e o app usa pasta de dados e identidade próprias, então nunca troca nem mexe numa instalação do ApkStart original. A auditoria completa, com a captura de tráfego de uma execução real, está em [docs/NO-CHINA.md](docs/NO-CHINA.md).
+O que mudou em relação ao original: saem o servidor de código na China e os dois proxies de terceiros do GitHub; sai o DNS chinês forçado e o Android passa a usar o DNS do seu PC; a verificação de conexão volta para a do Google, em vez da de um fabricante chinês; o Android deixa de vir em chinês com fuso da China; o atualizador só olha para `mvoloch/apkstart-west` e o app usa pasta de dados e identidade próprias, então nunca troca nem mexe numa instalação do ApkStart original. A auditoria completa, com o tráfego registrado em execuções reais, está em [docs/NO-CHINA.md](docs/NO-CHINA.md).
 
 **Requisitos:** Windows 10 ou 11 de 64 bits, virtualização ligada na BIOS, uns 6 GB livres. **Download:** [releases](https://github.com/mvoloch/apkstart-west/releases), ou compile a partir do código com os comandos acima. Na primeira execução o app baixa do Google (`dl.google.com`) o emulador (~460 MB), a imagem do sistema (~1,5 GB) e as ferramentas adb (~8 MB).
 

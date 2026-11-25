@@ -18,7 +18,7 @@ This page records what was removed from upstream ApkStart, which hosts ApkStart 
 | Prebuilt "runtime pack" built by the upstream author (`preferGithubRuntime: true`) | Downloaded the whole runtime from the author's release instead of Google | Off by default (`false`). The runtime comes from `dl.google.com` |
 | Updater pointing at upstream | Could replace this fork with upstream releases | Points only at `mvoloch/apkstart-west`; separate data folder `%APPDATA%\apkstart-west` |
 
-`test/no-china-test.js` (first step of `npm test`) fails with `file:line` if any of these hosts, DNS servers, the China time zone, or the removed settings (`giteeToken`, `sourcePreference`, `autoMirror`, `KNOWN_MIRRORS`, `fastDns`) comes back in any tracked file. The upstream Chinese docs kept in `docs/` still *mention* Gitee by name; none of them is loaded by the app.
+`test/no-china-test.js` (first step of `npm test`) fails with `file:line` if any of these hosts, DNS servers, the China time zone, or the removed settings (`giteeToken`, `sourcePreference`, `autoMirror`, `KNOWN_MIRRORS`, `fastDns`) comes back in any tracked file. The test looks for addresses, not words: Chinese code comments and two build messages inherited from upstream (in `src/core/sources.js`, `updater.js`, `download.js`, `provision.js`, `src/main.js`, `build/zip.js`) and the upstream Chinese docs in `docs/` still *mention* Gitee and the proxies by name, as history. None of them is an address the app can reach.
 
 ## 2. Hosts the code can still reach
 
@@ -35,25 +35,39 @@ From `git grep` over `src/`, `build/`, `.github/` and `package.json`:
 
 Apps the user installs, and Google Play itself, talk to whatever servers they choose; that is outside this app.
 
-## 3. Traffic seen in a real run (XPS, Windows 11, 24 Nov 2026, São Paulo time)
+## 3. Traffic seen in real runs (XPS, Windows 11, 24 Nov 2026, São Paulo time)
 
-**Android side (packet capture).** Run with `APKSTART_EMULATOR_TCPDUMP=<file>`, which passes `-tcpdump` to the emulator and records every packet Android sends or receives. Capture from 20:29 to 21:28: cold boot, install of Binary Eye 1.76.1, launch from its desktop shortcut, Play Store present but not signed in. 156 packets.
+Two sources were used, because neither sees everything on its own:
 
-| Name asked or contacted | Address | Owner (RDAP) |
-|---|---|---|
-| `connectivitycheck.gstatic.com` (HTTP, port 80) | 142.251.150.120 | Google |
-| `www.google.com` (TLS + QUIC, port 443) | 142.251.152.119 | Google |
-| DNS (53, and DNS-over-TLS 853) | 10.0.2.3 | Emulator's virtual DNS, forwards to the PC's DNS |
-| mDNS (5353) | 224.0.0.251, ff02::fb | Local multicast, never leaves the PC |
+- **Android packet capture.** `APKSTART_EMULATOR_TCPDUMP=<file>` passes `-tcpdump` to the emulator. It records the emulator's own network interface (`eth0`, which Android presents as a mobile-data network). Android also has a virtual Wi-Fi (`wlan0`), carried by the emulator's `netsimd` process; that path is **not** in the capture. In Run A, Android's default network was the mobile-data one on `eth0` (checked with `dumpsys connectivity`; Wi-Fi was connected but not validated). Run B was not checked.
+- **Windows connection log.** A poller (about every 0.7 s, no admin rights) recorded each new TCP connection of `electron`, `emulator`, `qemu-system-x86_64`, `adb` and `netsimd`, so it also covers the Wi-Fi path.
 
-**Windows side (connection log).** A poller recorded every TCP connection of `electron`, `qemu-system-x86_64` and `netsimd` (the emulator's network process) from 17:15 to 20:15, covering runtime download, several boots, Google Play services start-up (port 5228) and app install. 83 distinct remote addresses:
+### Run A, 21:41 to 21:45: capture and Windows log at the same time
+
+Boot, launch of Binary Eye 1.76.1, then the Play Store opened (not signed in) for two minutes.
+
+- Android capture: 2,072 packets. Every name visible in the capture, and every destination address, belongs to Google (DNS queries sent over DNS-over-TLS to 10.0.2.3:853 are encrypted, so their names are not visible; the addresses the apps connected to are): Play (`play.googleapis.com`, `play-fe.googleapis.com`, `play-lh.googleusercontent.com`, Play gateway), Google services (`android.googleapis.com`, `android.clients.google.com`, `mtalk.google.com` on port 5228, `notifications-pa`, `remoteprovisioning`, `digitalassetlinks`), `www.google.com`, `connectivitycheck.gstatic.com`, `time.google.com` / `time.android.com`, YouTube images and API used by the Play Store (`i.ytimg.com`, `youtubei.googleapis.com`), Google ads (`ad.doubleclick.net`, `www.googleadservices.com`) and Google's RCS (messaging) configuration host (`rcs-acs-tmo-us.jibe.google.com`). Plus the emulator's virtual DNS (10.0.2.3) and local multicast (mDNS).
+- Windows log: 14 remote addresses, all opened by `qemu-system-x86_64`, all in Google's 142.250.0.0/15, 172.217.0.0/16, 64.233.x or 216.239.x blocks. `netsimd` (Wi-Fi) opened none. 13 of the 14 are also in the capture; the other (142.251.145.7, Google) was seen only by the poller.
+
+### Run B, 20:29 to 21:28: capture only
+
+Binary Eye in use, then idle. 156 packets: `connectivitycheck.gstatic.com` (142.251.150.120) and `www.google.com` (142.251.152.119), both Google, plus the emulator's virtual DNS and mDNS.
+
+### Earlier session, 17:15 to 20:15: Windows log only
+
+Runtime checks and several boot attempts, with Google Play services starting (port 5228). This window includes Wi-Fi traffic: `netsimd` opened connections here. 83 distinct remote addresses:
 
 - 77 owned by Google, checked by RDAP: blocks 142.250.0.0/15, 172.217.0.0/16, 108.177.0.0/17, 173.194.0.0/16, 74.125.0.0/16, 192.178.0.0/15, plus 64.233.186.190, 216.239.36.155 and 104.154.125.27 (Google Cloud).
 - 3 owned by Claro S.A. / Embratel, Brazil (189.22.186.12, 189.43.122.204, 200.255.198.15), the local internet provider. Inferred, not proven: Google content caches hosted on the provider's network.
 - 3 private addresses: 10.0.2.3 and 10.0.2.4 (emulator virtual network) and 172.27.2.7 (DNS-over-TLS to a resolver on the local network).
 - None in China.
 
-**Limits.** The Windows log polls connection tables, so a connection that opens and closes between two polls can be missed, and UDP is not covered there (the Android capture covers UDP). Play Store was not signed in, so app-store traffic itself was not exercised. Reverse lookups were done by RDAP owner, not by geolocation of each address.
+**Limits.**
+- The Windows log polls connection tables, so a connection that opens and closes between two polls can be missed. It does not cover UDP.
+- The Android capture does not cover the virtual Wi-Fi path.
+- So Wi-Fi UDP traffic (for example QUIC) is not covered by either source. In Run A, Wi-Fi was not Android's default network.
+- The Play Store was opened but not signed in, so downloads from the store were not exercised.
+- Addresses were attributed by RDAP owner, not by the geolocation of each address.
 
 ## How to repeat the check
 
@@ -72,4 +86,15 @@ O que saiu do código: o servidor de código na China (Gitee), os dois proxies d
 
 O que o app ainda acessa: `dl.google.com` (Android do Google), o GitHub deste fork (atualizações), a verificação de internet do Google e, só se o usuário escolher o motor antigo opcional, um servidor na Alemanha e o SourceForge.
 
-Teste real no XPS em 24/11/2026: a captura de pacotes do Android (20h29 às 21h28, horário de São Paulo) viu só servidores do Google; o registro de conexões do Windows (17h15 às 20h15) viu 83 endereços: 77 do Google, 3 da Claro/Embratel (provedor local) e 3 da rede interna. Nenhum na China. Limites: o registro do Windows pode perder conexões muito curtas, e a Play Store não estava logada.
+Teste real no XPS em 24/11/2026, no horário de São Paulo:
+
+- **Das 21h41 às 21h45:** boot, Binary Eye e Play Store aberta. A captura de pacotes do Android (2.072 pacotes) e o registro de conexões do Windows (14 endereços) rodaram juntos, e todo nome visível e todo endereço de destino eram do Google. As consultas de DNS cifradas não mostram o nome, mas os endereços a que levaram aparecem.
+- **Das 20h29 às 21h28:** só captura, que viu só o Google.
+- **Das 17h15 às 20h15:** só o registro do Windows, que inclui o caminho do Wi-Fi virtual. Ele viu 83 endereços: 77 do Google, 3 da Claro/Embratel (provedor local) e 3 da rede interna.
+- Nenhum endereço é da China.
+
+Limites:
+
+- A captura do Android não vê o Wi-Fi virtual.
+- O registro do Windows pode perder conexões muito curtas e não vê UDP.
+- A Play Store não estava logada.
