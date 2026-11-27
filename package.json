@@ -1,7 +1,7 @@
 {
   "name": "apkstart-west",
   "productName": "ApkStart West",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Run Android apps (APK) on Windows with the official Android emulator, without any connection to servers in China. Fork of RoutineMiku/apkstart.",
   "main": "src/main.js",
   "author": "ApkStart West contributors (fork of RoutineMiku/apkstart)",

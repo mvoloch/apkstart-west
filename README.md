@@ -49,7 +49,7 @@ Get `ApkStart-<version>-Setup.exe` from [Releases](https://github.com/mvoloch/ap
 **Check the file (optional).** Each release has a `SHA256SUMS.txt` file with the fingerprint of every file. In PowerShell, in the folder where you saved the installer:
 
 ```powershell
-Get-FileHash .\ApkStart-0.7.0-Setup.exe -Algorithm SHA256
+Get-FileHash .\ApkStart-0.7.1-Setup.exe -Algorithm SHA256
 ```
 
 The `Hash` it prints must match the line for that file in `SHA256SUMS.txt` (upper or lower case does not matter). If it does not match, do not run the file.
@@ -111,7 +111,7 @@ O que mudou em relação ao original: saem o servidor de código na China e os d
 **Conferir o arquivo (opcional).** Cada versão traz um arquivo `SHA256SUMS.txt` com a "impressão digital" (hash SHA-256) de cada arquivo. No PowerShell, na pasta onde salvou o instalador:
 
 ```powershell
-Get-FileHash .\ApkStart-0.7.0-Setup.exe -Algorithm SHA256
+Get-FileHash .\ApkStart-0.7.1-Setup.exe -Algorithm SHA256
 ```
 
 O `Hash` que aparece tem de ser igual ao da linha desse arquivo no `SHA256SUMS.txt` (maiúscula ou minúscula tanto faz). Se for diferente, não abra o arquivo.
