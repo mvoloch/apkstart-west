@@ -42,7 +42,19 @@ The full audit, naming every removed host and DNS server, with every host the co
 
 ## Download
 
-Releases: [github.com/mvoloch/apkstart-west/releases](https://github.com/mvoloch/apkstart-west/releases). If there is no release yet, build from source (below).
+Get `ApkStart-<version>-Setup.exe` from [Releases](https://github.com/mvoloch/apkstart-west/releases) (about 82 MB) and run it. It installs for your Windows user only, in `%LOCALAPPDATA%\Programs\ApkStart West`, with no administrator rights, and adds an "ApkStart West" shortcut to the desktop and the Start menu. It never touches an install of upstream ApkStart.
+
+**Windows warning.** The installer is not code-signed (a signing certificate costs money every year), so Windows SmartScreen may show "Windows protected your PC". Click **More info**, check that the file name is right, then click **Run anyway**.
+
+**Check the file (optional).** Each release has a `SHA256SUMS.txt` file with the fingerprint of every file. In PowerShell, in the folder where you saved the installer:
+
+```powershell
+Get-FileHash .\ApkStart-0.7.0-Setup.exe -Algorithm SHA256
+```
+
+The `Hash` it prints must match the line for that file in `SHA256SUMS.txt` (upper or lower case does not matter). If it does not match, do not run the file.
+
+**Uninstall** from Windows Settings → Apps → Installed apps → ApkStart West. It stops Android if it is running and removes the program and its shortcuts. Your Android data (`%APPDATA%\apkstart-west`, a few GB) is kept so a reinstall starts fast; delete that folder by hand to free the space.
 
 On first start the app downloads the Android runtime from Google (`dl.google.com`): platform-tools (~8 MB), Android Emulator (~460 MB) and the Android 14 Google Play system image (~1.5 GB). Nothing is downloaded from anywhere else unless you set a custom address in Settings.
 
@@ -55,7 +67,7 @@ npm ci
 npm start              # opens the app; first run deploys the runtime from dl.google.com
 npm test               # unit and integration tests, no network needed
 npm run pack           # portable build in dist\ApkStart-win64-portable\
-npm run build:exe      # installer with the runtime bundled (needs `npm run runtime` data)
+npm run build:exe      # installer in dist\release\ (app and Electron only, no Android runtime)
 ```
 
 Node.js 20 or newer. With npm 11, if `node_modules\electron\dist\electron.exe` is missing after `npm ci`, run `node node_modules\electron\install.js`.
@@ -90,6 +102,22 @@ O ApkStart West é um fork do [ApkStart](https://github.com/RoutineMiku/apkstart
 
 O que mudou em relação ao original: saem o servidor de código na China e os dois proxies de terceiros do GitHub; sai o DNS chinês forçado e o Android passa a usar o DNS do seu PC; a verificação de conexão volta para a do Google, em vez da de um fabricante chinês; o Android deixa de vir em chinês com fuso da China; o atualizador só olha para `mvoloch/apkstart-west` e o app usa pasta de dados e identidade próprias, então nunca troca nem mexe numa instalação do ApkStart original. A auditoria completa, com o tráfego registrado em execuções reais, está em [docs/NO-CHINA.md](docs/NO-CHINA.md).
 
-**Requisitos:** Windows 10 ou 11 de 64 bits, virtualização ligada na BIOS, uns 6 GB livres. **Download:** [releases](https://github.com/mvoloch/apkstart-west/releases), ou compile a partir do código com os comandos acima. Na primeira execução o app baixa do Google (`dl.google.com`) o emulador (~460 MB), a imagem do sistema (~1,5 GB) e as ferramentas adb (~8 MB).
+**Requisitos:** Windows 10 ou 11 de 64 bits, virtualização ligada na BIOS, uns 6 GB livres.
+
+**Download.** Baixe `ApkStart-<versão>-Setup.exe` em [Releases](https://github.com/mvoloch/apkstart-west/releases) (uns 82 MB) e abra. Ele instala só para o seu usuário do Windows, em `%LOCALAPPDATA%\Programs\ApkStart West`, sem pedir senha de administrador, e cria o atalho "ApkStart West" na área de trabalho e no menu Iniciar. Não mexe numa instalação do ApkStart original.
+
+**Aviso do Windows.** O instalador não tem assinatura digital (o certificado é pago todo ano), então o Windows pode mostrar "O Windows protegeu o computador". Clique em **Mais informações**, confira o nome do arquivo e clique em **Executar assim mesmo**.
+
+**Conferir o arquivo (opcional).** Cada versão traz um arquivo `SHA256SUMS.txt` com a "impressão digital" (hash SHA-256) de cada arquivo. No PowerShell, na pasta onde salvou o instalador:
+
+```powershell
+Get-FileHash .\ApkStart-0.7.0-Setup.exe -Algorithm SHA256
+```
+
+O `Hash` que aparece tem de ser igual ao da linha desse arquivo no `SHA256SUMS.txt` (maiúscula ou minúscula tanto faz). Se for diferente, não abra o arquivo.
+
+**Desinstalar:** Configurações do Windows → Aplicativos → Aplicativos instalados → ApkStart West. Ele desliga o Android se estiver aberto e remove o programa e os atalhos. Os dados do Android (`%APPDATA%\apkstart-west`, alguns GB) ficam, para uma reinstalação começar rápido; apague essa pasta à mão se quiser liberar o espaço.
+
+Na primeira execução o app baixa do Google (`dl.google.com`) o emulador (~460 MB), a imagem do sistema (~1,5 GB) e as ferramentas adb (~8 MB). Para compilar a partir do código, use os comandos da seção "Build from source" acima.
 
 **Créditos:** baseado no ApkStart, de **RoutineMiku**, sob licença MIT. Licença deste fork: [MIT](LICENSE).
