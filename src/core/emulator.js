@@ -664,8 +664,21 @@ class EmulatorEngine {
     // resources/runtime）时 root/avd 不存在也不可写，AVD 要落到用户数据目录。
     const avdHome = doctor.shortPath(this.provisioner.paths().avdHome);
     const adbPort = String(plan.adbPort || process.env.ANDROID_ADB_SERVER_PORT || '5044');
+    const base = { ...process.env };
+    // emulator.exe also looks for adb on PATH. Another adb there (winget, Android
+    // Studio) talks to the same server port; one of a different version kills the
+    // running server and Android goes "offline". Only our own adb may be found.
+    const pathKey = Object.keys(base).find((k) => k.toUpperCase() === 'PATH') || 'PATH';
+    const oldPath = String(base[pathKey] || '');
+    for (const k of Object.keys(base)) if (k.toUpperCase() === 'PATH') delete base[k];
+    const ownTools = path.join(safeRoot, 'platform-tools');
+    const others = oldPath.split(path.delimiter).filter((d) => {
+      if (!d) return false;
+      try { return !fs.existsSync(path.join(d.replace(/^"|"$/g, ''), 'adb.exe')); } catch (_) { return true; }
+    });
+    base[pathKey] = [ownTools, ...others].join(path.delimiter);
     return {
-      ...process.env,
+      ...base,
       ANDROID_SDK_ROOT: safeRoot,
       ANDROID_HOME: safeRoot,
       ANDROID_AVD_HOME: avdHome,
@@ -978,14 +991,30 @@ class EmulatorEngine {
   }
 
   /**
+   * The adb this app talks to the emulator with: the runtime's own copy first,
+   * like engine.adbPath(). Falling back to a bare "adb" meant PATH (winget,
+   * Android Studio), and an adb started from PATH became the server on the
+   * dedicated port.
+   */
+  _ownAdb() {
+    const cands = [];
+    try { cands.push(this.provisioner.paths().adbExe); } catch (_) { /* ignore */ }
+    try { cands.push(path.join(this.locate().root, 'platform-tools', 'adb.exe')); } catch (_) { /* ignore */ }
+    try { cands.push(this.provisioner.adbVersionPath()); } catch (_) { /* ignore */ }
+    for (const c of cands) {
+      try { if (c && fs.existsSync(c)) return c; } catch (_) { /* ignore */ }
+    }
+    return 'adb';
+  }
+
+  /**
    * Graceful shutdown through the emulator console (`adb emu kill` works even
    * while the device is "offline"), then wait up to `waitMs` for it to exit.
    * @returns {Promise<boolean>} true when the console port is closed
    */
   async _gracefulStop({ waitMs = 20000 } = {}) {
     if (!(await this._consoleAlive())) return true;
-    let adb = 'adb';
-    try { adb = this.provisioner.adbVersionPath() || 'adb'; } catch (_) { /* PATH */ }
+    const adb = this._ownAdb();
     const adbPort = Number(process.env.ANDROID_ADB_SERVER_PORT) || this.adbPort || 5044;
     const env = { ...process.env, ANDROID_ADB_SERVER_PORT: String(adbPort) };
     const serial = this.serial || `emulator-${this.port || 5554}`;
@@ -1024,8 +1053,7 @@ class EmulatorEngine {
   }
 
   async _resetAdbServer(adbPort) {
-    let adb = 'adb';
-    try { adb = this.provisioner.adbVersionPath() || 'adb'; } catch (_) { /* 用 PATH 里的 */ }
+    const adb = this._ownAdb();
     const env = { ...process.env, ANDROID_ADB_SERVER_PORT: String(adbPort) };
     const run = (args, timeout) => new Promise((resolve) => {
       try {
@@ -1107,15 +1135,7 @@ class EmulatorEngine {
     const path = require('path');
     // 同 repairWifi：防住「把函数当路径传进来」这种调用错误
     let adb = typeof adbPath === 'function' ? adbPath() : (adbPath || '');
-    if (!adb) {
-      try { adb = this.provisioner.adbVersionPath() || ''; } catch (_) { adb = ''; }
-    }
-    if (!adb) {
-      // adbVersionPath() 只查「版本文件」，很多安装形态下是空的；
-      // 直接按运行时根目录找 bundled 的 platform-tools 才稳。
-      try { adb = path.join(this.locate().root, 'platform-tools', 'adb.exe'); } catch (_) { adb = ''; }
-    }
-    if (!adb || !fs.existsSync(adb)) adb = 'adb';
+    if (!adb || !fs.existsSync(adb)) adb = this._ownAdb();
     const port = Number(process.env.ANDROID_ADB_SERVER_PORT) || this.adbPort || 5044;
     const env = { ...process.env, ANDROID_ADB_SERVER_PORT: String(port) };
     const sh = (cmd, timeout = 8000) => new Promise((resolve) => {
@@ -1194,10 +1214,7 @@ class EmulatorEngine {
     const path = require('path');
     // 防御：调用方可能误把函数本身传进来（rt.adbPath 是个方法）。
     let adb = typeof adbPath === 'function' ? adbPath() : (adbPath || '');
-    if (!adb) {
-      try { adb = path.join(this.locate().root, 'platform-tools', 'adb.exe'); } catch (_) { adb = ''; }
-    }
-    if (!adb || !fs.existsSync(adb)) adb = 'adb';
+    if (!adb || !fs.existsSync(adb)) adb = this._ownAdb();
     const port = Number(process.env.ANDROID_ADB_SERVER_PORT) || this.adbPort || 5044;
     const env = { ...process.env, ANDROID_ADB_SERVER_PORT: String(port) };
     const sh = (cmd, timeout = 10000) => new Promise((resolve) => {
