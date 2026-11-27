@@ -1,5 +1,16 @@
 ; ApkStart West custom NSIS script.
 
+; Default install folder: %LOCALAPPDATA%\Programs\ApkStart West. Without this, the folder
+; would follow the exe name and be "Programs\ApkStart", the same folder upstream ApkStart
+; uses, so one install would overwrite the other. electron-builder reads InstallLocation
+; from this key as the default folder; an existing value (a previous install, or a folder
+; the user picked) is kept. The uninstaller deletes the key.
+!macro preInit
+  ReadRegStr $0 HKCU "${INSTALL_REGISTRY_KEY}" InstallLocation
+  StrCmp $0 "" 0 +2
+  WriteRegExpandStr HKCU "${INSTALL_REGISTRY_KEY}" InstallLocation "$LOCALAPPDATA\Programs\ApkStart West"
+!macroend
+
 ; Install: write the desktop and Start menu shortcuts a second time with NSIS's own
 ; CreateShortcut. On some PCs (desktop redirected to OneDrive, security software rolling
 ; shortcuts back) electron-builder's shortcut step fails silently. Same names as
