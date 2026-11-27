@@ -1,7 +1,7 @@
 {
   "name": "apkstart-west",
   "productName": "ApkStart West",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "description": "Run Android apps (APK) on Windows with the official Android emulator, without any connection to servers in China. Fork of RoutineMiku/apkstart.",
   "main": "src/main.js",
   "author": "ApkStart West contributors (fork of RoutineMiku/apkstart)",
@@ -39,7 +39,7 @@
     "test:ui": "electron test/settings-ui-test.js",
     "pack": "node build/pack.js",
     "runtime": "node build/prepare-runtime.js",
-    "build:exe": "node build/prepare-runtime.js && electron-builder --win nsis --config electron-builder.yml",
+    "build:exe": "electron-builder --win nsis --publish never --config electron-builder.yml",
     "selftest": "node scripts/selftest.js",
     "assoc:on": "node scripts/assoc.js on",
     "assoc:off": "node scripts/assoc.js off",

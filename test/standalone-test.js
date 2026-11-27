@@ -209,12 +209,13 @@ function touch(dir, rel, bytes = 8) {
     assert(/assertStandalone\(path\.join\(OUT, 'resources'\)/.test(src), 'pack.js 未接入守卫');
   });
 
-  test('打包只带 build/runtime（Google 运行时），没有别的模拟器目录', () => {
+  // West: the installer is light. It bundles no runtime at all (no Google components,
+  // no third-party emulator); the app downloads the runtime from dl.google.com on first run.
+  test('the installer bundles no runtime (no extraResources)', () => {
     const yml = read('electron-builder.yml');
-    const block = yml.slice(yml.indexOf('extraResources:'));
-    const head = block.slice(0, block.indexOf('win:'));
-    assert(!/mumu|ldplayer|bluestacks/i.test(head), 'extraResources 里出现了第三方模拟器');
-    assert(/build\/runtime/.test(head), 'extraResources 没有内置运行时');
+    assert(!/^\s*extraResources\s*:/m.test(yml), 'electron-builder.yml bundles extra resources');
+    assert(!/mumu|ldplayer|bluestacks/i.test(yml), 'a third-party emulator appears in electron-builder.yml');
+    assert(/executableName:\s*ApkStart\s*$/m.test(yml), 'the main program must be ApkStart.exe');
   });
 
   console.log(`\n结果：${passed} 通过，${failed} 失败\n`);

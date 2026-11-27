@@ -1,192 +1,98 @@
 name: Release
 
+# Manual only. Creating a tag or a release never starts this workflow, so a release
+# built and tested by hand is never rebuilt or overwritten. Run it from the Actions tab
+# with an existing tag (for example v0.7.1). It refuses to replace assets that already
+# exist on that release.
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, for example v0.7.1 (the tag must already exist)'
+        required: true
 
 permissions:
   contents: write
 
 jobs:
   build:
-    name: 构建便携版并发布
+    name: Build the light installer and portable zip, then publish
     runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: 安装依赖（含 Electron 运行时）
+      - name: Install dependencies (with the Electron binary)
         run: npm ci
 
-      - name: 测试
+      - name: Test
         run: npm test
 
-      - name: 打包便携版
-        run: npm run pack
-
-      # 7-Zip -mx=9 keeps the portable zip under 100 MiB; build/zip.js fails the job above that.
-      - name: 压缩产物（7-Zip，体积闸门 100MiB）
-        shell: pwsh
-        run: |
-          $tag = "${{ github.ref_name }}"
-          if (-not $tag.StartsWith('v')) { $tag = "v$tag" }
-          node build/zip.js dist/ApkStart-win64-portable "ApkStart-$tag-win64-portable.zip" --limit-mb 100
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Get-Item "ApkStart-$tag-win64-portable.zip" | Select-Object Name, Length
-
-      # 增量更新资产：清单 + 代码层 zip（只有 resources/app，几 MB）。
-      # 客户端本机 Electron 版本一致时只下这两个小文件，不再每次重下 ~100MB 整包；
-      # 版本不一致 / 校验不过会自动退回完整包，所以整包照常发布。
-      - name: 生成增量更新资产（清单 + 代码包）
-        shell: pwsh
-        run: |
-          $tag = "${{ github.ref_name }}"
-          if (-not $tag.StartsWith('v')) { $tag = "v$tag" }
-          node build/incremental.js dist/ApkStart-win64-portable $tag
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      # 创建 Release 并上传轻量便携版（壳层极小，运行时首次启动按需下载）
-      - name: 创建 Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: pwsh
-        run: |
-          $tag = "${{ github.ref_name }}"
-          if (-not $tag.StartsWith('v')) { $tag = "v$tag" }
-          $zip = "ApkStart-$tag-win64-portable.zip"
-          $ver = $tag.TrimStart('v')
-          $manifest = "ApkStart-v$ver-manifest.json"
-          $appzip = "ApkStart-v$ver-app.zip"
-          # 幂等：release 已存在（如重跑 / 重推 tag）就跳过 create，只上传资产。
-          # 但说明要每次都回填：以前只在 create 时写 notes，导致已有 release 的 body
-          # 永远停在自动生成的「Full Changelog」一行（0.6.1~0.6.4 就是这样丢的）。
-          $existing = gh release view $tag --json tagName -q .tagName 2>$null
-          # 有手写的发版说明就用它（.github/release-notes-<tag>.md），比 --generate-notes
-          # 的「Full Changelog」有用得多；没有才退回自动生成。
-          $notes = ".github/release-notes-$tag.md"
-          if (-not $existing) {
-            if (Test-Path $notes) {
-              gh release create $tag --title "ApkStart $tag" --notes-file $notes
-            } else {
-              gh release create $tag --title "ApkStart $tag" --generate-notes
-            }
-            if ($LASTEXITCODE -ne 0) { exit 1 }
-          } elseif (Test-Path $notes) {
-            # release 已存在：把最新的手写说明写回去（覆盖那段 Full Changelog）
-            gh release edit $tag --notes-file $notes
-            if ($LASTEXITCODE -ne 0) { Write-Error "回填 $tag 说明失败"; exit 1 }
-          }
-          $ok = $false
-          for ($i = 1; $i -le 3 -and -not $ok; $i++) {
-            gh release upload $tag $zip $manifest $appzip --clobber
-            if ($LASTEXITCODE -eq 0) { $ok = $true } else { Start-Sleep -Seconds 15 }
-          }
-          if (-not $ok) { Write-Error "上传失败: $zip / $manifest / $appzip"; exit 1 }
-          gh release view $tag --json assets --jq '.assets[].name'
-
-  full:
-    name: 构建完整版（内置运行时，离线开箱即用）
-    runs-on: windows-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: 安装依赖
-        run: npm ci
-
-      # 从 Google 官方源组装运行时（emulator + platform-tools + aehd + Play x86_64 镜像）。
-      # 输出到 engine/，与本地开发时的目录结构一致。
-      - name: 组装运行时
-        run: node build/fetch-runtime.js engine
-
-      # prepare-runtime 会把 system.img/vendor.img 压成 xz(LZMA2)。
-      # CI runner 只有 2 核：XZ_PRESET=6 把压缩时间从 ~2h 降到 ~40min（体积 +3%）。
-      # XZ_TIMEOUT_MS 是看门狗：超时自动 kill 并落 gzip 兜底，
-      # 绝不重演「stdin 没接 EOF → 0 字节输出 → 挂死 3 小时」。
-      - name: 准备运行时（xz 压缩，CI 降档加速）
-        run: node build/prepare-runtime.js --force
-        env:
-          XZ_PRESET: '6'
-          XZ_TIMEOUT_MS: '3600000'
-
-      # 内置微软 VC++ 2015-2022 x64 运行库：安卓模拟器（Qt6）与 qemu 都依赖它，
-      # 缺了在「其他电脑」上会直接起不来（0xc0000135 / MSVCP140 缺失）。
-      # 放到 build/runtime 内，随 extraResources 一起打进安装包；离线也能一键安装。
-      - name: 下载 VC++ 运行库（离线内置）
-        shell: pwsh
-        run: |
-          $dir = "build\runtime"
-          if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-          $out = "$dir\vc_redist.x64.exe"
-          Write-Output "下载 VC++ 2015-2022 x64 运行库…"
-          curl.exe -L -o $out "https://aka.ms/vs/17/release/vc_redist.x64.exe"
-          if (-not (Test-Path $out) -or (Get-Item $out).Length -lt 1MB) { Write-Error "vc_redist 下载失败" }
-          Get-Item $out | Select-Object Name, Length
-
-      # 不打 git tag 时 electron-builder 不会隐式发布；打了 tag 也会因为本 job 没有
-      # GH_TOKEN 而报 "GitHub Personal Access Token is not set" 后退出 1（之前完整版一直失败的根因）。
-      # 这里显式 --publish never，安装包由后面「上传完整版到 Release」步骤用 gh release upload 上传。
-      - name: 构建完整版安装包
-        run: npx electron-builder --win nsis --publish never
+      # Light installer: no Android runtime inside. The app downloads the Android
+      # Emulator and system image from dl.google.com on first run, so no Google
+      # component is redistributed here.
+      - name: Build the installer
+        run: npx electron-builder --win nsis --publish never --config electron-builder.yml
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
-      - name: 上传完整版到 Release
+      - name: Build the portable version
+        run: npm run pack
+
+      # 7-Zip -mx=9 keeps the portable zip under 100 MiB; build/zip.js fails the job above that.
+      - name: Zip the portable version
+        shell: pwsh
+        run: |
+          $tag = "${{ inputs.tag }}"
+          node build/zip.js dist/ApkStart-win64-portable "ApkStart-$tag-win64-portable.zip" --limit-mb 100
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      # Incremental update assets for the portable version (manifest + code-only zip).
+      - name: Build incremental update assets
+        shell: pwsh
+        run: |
+          node build/incremental.js dist/ApkStart-win64-portable "${{ inputs.tag }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Write SHA-256 checksums
+        shell: pwsh
+        run: |
+          $tag = "${{ inputs.tag }}"
+          $ver = $tag.TrimStart('v')
+          $files = @(
+            (Get-ChildItem dist/release/*Setup.exe | Select-Object -First 1).FullName,
+            "ApkStart-$tag-win64-portable.zip",
+            "ApkStart-v$ver-manifest.json",
+            "ApkStart-v$ver-app.zip"
+          )
+          $lines = foreach ($f in $files) { $h = Get-FileHash -Algorithm SHA256 $f; "{0}  {1}" -f $h.Hash.ToLower(), (Split-Path $f -Leaf) }
+          $lines | Set-Content -Encoding ascii SHA256SUMS.txt
+          Get-Content SHA256SUMS.txt
+
+      # Uploads without --clobber: if an asset with the same name is already on the
+      # release (for example one tested by hand), the upload fails instead of replacing it.
+      - name: Publish to the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          if (-not $tag.StartsWith('v')) { $tag = "v$tag" }
-          $setup = Get-ChildItem dist/release/*Setup.exe | Select-Object -First 1
-          if (-not $setup) { Write-Error "未找到 Setup.exe"; exit 1 }
-          Write-Output ("上传 {0} ({1:N0} MB)" -f $setup.Name, ($setup.Length / 1MB))
-          $ok = $false
-          for ($i = 1; $i -le 3 -and -not $ok; $i++) {
-            gh release upload $tag $setup.FullName --clobber
-            if ($LASTEXITCODE -eq 0) { $ok = $true } else { Start-Sleep -Seconds 20 }
+          $tag = "${{ inputs.tag }}"
+          $ver = $tag.TrimStart('v')
+          $existing = gh release view $tag --json tagName -q .tagName 2>$null
+          if (-not $existing) {
+            $notes = ".github/release-notes-$tag.md"
+            if (Test-Path $notes) { gh release create $tag --verify-tag --title "ApkStart West $tag" --notes-file $notes }
+            else { gh release create $tag --verify-tag --title "ApkStart West $tag" --generate-notes }
+            if ($LASTEXITCODE -ne 0) { exit 1 }
           }
-          if (-not $ok) { Write-Error "上传失败: $($setup.Name)"; exit 1 }
-          gh release view $tag --json assets --jq '.assets[] | "\(.name) \(.size)"'
-
-      # 轻量版（不带运行时）不再去 dl.google.com 逐个下 emulator / 系统镜像，
-      # 而是直接下这一个整包 —— 下载源与「软件更新」同为本项目 GitHub Release，
-      # 国内网络稳定性、出问题后的排障都只在一个地方。
-      # 内容已经是 .xz 压缩过的镜像，这里用 bsdtar 直接打 zip（不再二次压缩，省几十分钟）。
-      - name: 打包运行时整包（轻量版下载源）
-        shell: pwsh
-        run: |
-          $tag = "${{ github.ref_name }}"
-          if (-not $tag.StartsWith('v')) { $tag = "v$tag" }
-          $zip = "ApkStart-runtime-$tag.zip"
-          if (-not (Test-Path "build\runtime\emulator\emulator.exe")) { Write-Error "build\runtime 不完整"; exit 1 }
-          tar.exe -a -cf $zip -C "build\runtime" .
-          if ($LASTEXITCODE -ne 0) { Write-Error "打包运行时失败"; exit 1 }
-          Get-Item $zip | Select-Object Name, @{n='MB';e={[math]::Round($_.Length/1MB,1)}}
-
-      - name: 上传运行时整包到 Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: pwsh
-        run: |
-          $tag = "${{ github.ref_name }}"
-          if (-not $tag.StartsWith('v')) { $tag = "v$tag" }
-          $zip = "ApkStart-runtime-$tag.zip"
-          $ok = $false
-          for ($i = 1; $i -le 3 -and -not $ok; $i++) {
-            gh release upload $tag $zip --clobber
-            if ($LASTEXITCODE -eq 0) { $ok = $true } else { Start-Sleep -Seconds 20 }
-          }
-          if (-not $ok) { Write-Error "上传失败: $zip"; exit 1 }
+          $setup = (Get-ChildItem dist/release/*Setup.exe | Select-Object -First 1).FullName
+          gh release upload $tag $setup "ApkStart-$tag-win64-portable.zip" "ApkStart-v$ver-manifest.json" "ApkStart-v$ver-app.zip" SHA256SUMS.txt
+          if ($LASTEXITCODE -ne 0) { Write-Error "Upload failed (an asset with the same name may already exist)"; exit 1 }
           gh release view $tag --json assets --jq '.assets[] | "\(.name) \(.size)"'
